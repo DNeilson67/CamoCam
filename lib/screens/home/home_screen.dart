@@ -4,8 +4,7 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../pattern_generator/pattern_generator_landing_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Content-only version without navbar (used in MainLayout)
 class HomeScreenContent extends StatelessWidget {
@@ -46,15 +45,15 @@ class HomeScreenContent extends StatelessWidget {
   }
 
     Widget _buildHeader() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? "User";
-    final photoUrl = user?.photoURL; 
+    final user = Supabase.instance.client.auth.currentUser;
+
+    final displayName = user?.userMetadata?['full_name'] ?? "User";
+    final photoUrl = user?.userMetadata?['avatar_url'];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 17),
       child: Row(
         children: [
-          // Profile Avatar
           CircleAvatar(
             radius: 20,
             backgroundColor: const Color(0xFFE0E0E0),
@@ -66,7 +65,6 @@ class HomeScreenContent extends StatelessWidget {
 
           const SizedBox(width: 11),
 
-          // Welcome Text
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
