@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'ar_choose_pattern_screen.dart';
+import '../profile/model_viewer_screen.dart';
 
 class ArChooseModelScreen extends StatefulWidget {
   const ArChooseModelScreen({super.key});
@@ -15,16 +16,19 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
 
   final List<ModelItem> _models = [
     ModelItem(
-      name: 'Computer',
-      imagePath: 'assets/images/computer.png',
+      name: 'Helicopter',
+      imagePath: 'assets/objects/models/helicopter/helicopter.png',
+      modelPath: 'assets/objects/models/helicopter/helicopter.glb',
     ),
     ModelItem(
-      name: 'Phone',
-      imagePath: 'assets/images/phone.png',
+      name: 'Jeep',
+      imagePath: 'assets/objects/models/jeep/jeep.png',
+      modelPath: 'assets/objects/models/jeep/jeep.glb',
     ),
     ModelItem(
-      name: 'Tablet',
-      imagePath: 'assets/images/tablet.png',
+      name: 'Tank',
+      imagePath: 'assets/objects/models/tank/tank.png',
+      modelPath: 'assets/objects/models/tank/tank.glb',
     ),
   ];
 
@@ -143,13 +147,13 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                         height: 48,
                         child: OutlinedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Preview ${_models[_currentIndex].name}',
-                                  style: GoogleFonts.montserrat(),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ModelViewerScreen(
+                                  modelName: _models[_currentIndex].name,
+                                  modelUrl: _models[_currentIndex].modelPath,
                                 ),
-                                duration: const Duration(seconds: 1),
                               ),
                             );
                           },
@@ -221,6 +225,11 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
 class ModelItem {
   final String name;
   final String imagePath;
+  final String modelPath;
 
-  ModelItem({required this.name, required this.imagePath});
+  ModelItem({
+    required this.name,
+    required this.imagePath,
+    required this.modelPath,
+  });
 }

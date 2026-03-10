@@ -74,10 +74,15 @@ class ModelViewerScreen extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: const ModelViewer(
-                    backgroundColor: Color.fromARGB(0xFF, 0xEE, 0xEE, 0xEE),
-                    src: 'assets/models/T34-85.glb',
-                    alt: 'A 3D model',
+                  child: ModelViewer(
+                    backgroundColor: const Color.fromARGB(
+                      0xFF,
+                      0xEE,
+                      0xEE,
+                      0xEE,
+                    ),
+                    src: modelUrl,
+                    alt: 'A 3D model of $modelName',
                     ar: true,
                     arModes: ['scene-viewer', 'webxr', 'quick-look'],
                     autoRotate: true,

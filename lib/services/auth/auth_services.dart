@@ -8,24 +8,17 @@ class AuthService {
   static const String _webClientId =
       '921185889614-hm2ctm2r400ms7204orvgrd2o07mmnna.apps.googleusercontent.com';
 
-  // ✅ NEW GoogleSignIn v7+ style (same as your Firebase example)
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   Future<AuthResponse?> signInWithGoogle() async {
     try {
-      // ✅ Initialize Google Sign-In (NEW API STYLE)
-      await _googleSignIn.initialize(
-        serverClientId: _webClientId, // keep null for Firebase default
-      );
-
-      // ✅ Start sign-in flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
 
       if (googleUser == null) {
         return null; // user cancelled
       }
 
-      // ✅ Get authentication tokens
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -35,7 +28,6 @@ class AuthService {
         throw 'Missing ID Token';
       }
 
-      // ✅ Send token to Supabase (NOT Firebase)
       final response = await supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,

@@ -31,3 +31,6 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/models/
+    - assets/objects/models/helicopter/
+    - assets/objects/models/jeep/
+    - assets/objects/models/tank/
