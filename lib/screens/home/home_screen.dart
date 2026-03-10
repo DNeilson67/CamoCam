@@ -130,8 +130,8 @@ class HomeScreenContent extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildSmallCard(
-                  title: 'AR Modee',
-                  subtitle: 'Seee your camouflaged object live',
+                  title: 'AR Mode',
+                  subtitle: 'See your camouflaged object live',
                   iconPath: 'assets/images/AR_mode.png',
                 ),
               ),
