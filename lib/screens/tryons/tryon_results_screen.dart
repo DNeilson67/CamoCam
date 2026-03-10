@@ -136,11 +136,15 @@ class TryonResultsScreen extends StatelessWidget {
                       height: 50,
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.of(context).popUntil(
-                            (route) => route.isFirst,
-                          );
+                          Navigator.of(
+                            context,
+                          ).popUntil((route) => route.isFirst);
                         },
-                        icon: const Icon(Icons.refresh, color: Color(0xFF4A7C59), size: 18),
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Color(0xFF4A7C59),
+                          size: 18,
+                        ),
                         label: Text(
                           'Restart',
                           style: GoogleFonts.montserrat(
@@ -181,7 +185,11 @@ class TryonResultsScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.save_alt, color: Colors.white, size: 18),
+                        icon: const Icon(
+                          Icons.save_alt,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         label: Text(
                           'Save to Gallery',
                           style: GoogleFonts.montserrat(

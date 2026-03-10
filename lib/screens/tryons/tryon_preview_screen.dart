@@ -152,10 +152,7 @@ class TryonPreviewScreen extends StatelessWidget {
                       ),
                     ),
                     child: IconButton(
-                      icon: const Icon(
-                        Icons.refresh,
-                        color: Colors.black,
-                      ),
+                      icon: const Icon(Icons.refresh, color: Colors.black),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -178,7 +175,11 @@ class TryonPreviewScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.save_outlined, color: Color(0xFF4A7C59), size: 18),
+                        icon: const Icon(
+                          Icons.save_outlined,
+                          color: Color(0xFF4A7C59),
+                          size: 18,
+                        ),
                         label: Text(
                           'Save Model',
                           style: GoogleFonts.montserrat(
@@ -188,7 +189,10 @@ class TryonPreviewScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF8FC0A9), width: 2),
+                          side: const BorderSide(
+                            color: Color(0xFF8FC0A9),
+                            width: 2,
+                          ),
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -214,7 +218,11 @@ class TryonPreviewScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.face_retouching_natural, color: Colors.white, size: 18),
+                      icon: const Icon(
+                        Icons.face_retouching_natural,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       label: Text(
                         'Try On',
                         style: GoogleFonts.montserrat(

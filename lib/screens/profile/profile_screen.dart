@@ -19,7 +19,6 @@ class ProfileScreen extends StatelessWidget {
     'assets/images/pattern_3.png',
   ];
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -206,76 +205,80 @@ class ProfileScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(
-                              'Log Out',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            content: Text(
-                              'Are you sure you want to log out?',
-                              style: GoogleFonts.montserrat(),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(
-                                  'Cancel',
-                                  style: GoogleFonts.montserrat(
-                                    color: const Color(0xFF797777),
-                                  ),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context); // Close dialog
-                                  // Navigate back to onboarding and remove all previous routes
-                                  Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const OnboardingScreen(),
-                                    ),
-                                    (route) => false,
-                                  );
-                                },
-                                child: Text(
-                                  'Log Out',
-                                  style: GoogleFonts.montserrat(
-                                    color: const Color(0xFFCF3017),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFCF3017),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.logout, color: Color(0xFFFFE9E5), size: 20),
-                          const SizedBox(width: 8),
-                          Text(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(
                             'Log Out',
                             style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFFFE9E5),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                          content: Text(
+                            'Are you sure you want to log out?',
+                            style: GoogleFonts.montserrat(),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Cancel',
+                                style: GoogleFonts.montserrat(
+                                  color: const Color(0xFF797777),
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context); // Close dialog
+                                // Navigate back to onboarding and remove all previous routes
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OnboardingScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                              child: Text(
+                                'Log Out',
+                                style: GoogleFonts.montserrat(
+                                  color: const Color(0xFFCF3017),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFCF3017),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.logout,
+                          color: Color(0xFFFFE9E5),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Log Out',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFFFFE9E5),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

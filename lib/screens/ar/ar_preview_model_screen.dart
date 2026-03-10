@@ -215,7 +215,11 @@ class ArPreviewModelScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.view_in_ar, color: Colors.white, size: 18),
+                          icon: const Icon(
+                            Icons.view_in_ar,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                           label: Text(
                             'AR',
                             style: GoogleFonts.montserrat(
@@ -253,7 +257,11 @@ class ArPreviewModelScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.bookmark_add_outlined, color: Colors.white, size: 18),
+                      icon: const Icon(
+                        Icons.bookmark_add_outlined,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       label: Text(
                         'Save to Your Model',
                         style: GoogleFonts.montserrat(

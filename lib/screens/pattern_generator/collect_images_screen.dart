@@ -141,10 +141,7 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: Image.file(
-                _images[index]!,
-                fit: BoxFit.contain,
-              ),
+              child: Image.file(_images[index]!, fit: BoxFit.contain),
             ),
             const SizedBox(height: 16),
             Row(
@@ -155,7 +152,11 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
                       Navigator.pop(ctx);
                       _removeImage(index);
                     },
-                    icon: const Icon(Icons.delete_outline, color: Color(0xFFCF3017), size: 18),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Color(0xFFCF3017),
+                      size: 18,
+                    ),
                     label: Text(
                       'Remove',
                       style: GoogleFonts.montserrat(
@@ -165,8 +166,13 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFCF3017), width: 2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(
+                        color: Color(0xFFCF3017),
+                        width: 2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       backgroundColor: Colors.white,
                     ),
                   ),
@@ -175,7 +181,11 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.check, color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     label: Text(
                       'Keep',
                       style: GoogleFonts.montserrat(
@@ -186,7 +196,9 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4A7C59),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -284,7 +296,11 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
                   height: 50,
                   child: ElevatedButton.icon(
                     onPressed: _canGenerate ? _generatePattern : null,
-                    icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     label: Text(
                       'Generate Pattern',
                       style: GoogleFonts.montserrat(

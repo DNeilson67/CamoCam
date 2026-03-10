@@ -55,7 +55,6 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
     ),
   ];
 
-
   @override
   void initState() {
     super.initState();
@@ -264,7 +263,11 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                             );
                           }
                         : null,
-                    icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     label: Text(
                       'Apply Now',
                       style: GoogleFonts.montserrat(
@@ -276,7 +279,9 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF68B0AB),
-                      disabledBackgroundColor: const Color(0xFF68B0AB).withOpacity(0.5),
+                      disabledBackgroundColor: const Color(
+                        0xFF68B0AB,
+                      ).withOpacity(0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -327,10 +332,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
                 ),
-                child: Image.asset(
-                  pattern.imagePath,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.asset(pattern.imagePath, fit: BoxFit.cover),
               ),
             ),
 
@@ -398,4 +400,3 @@ class PatternItem {
     required this.imagePath,
   });
 }
-

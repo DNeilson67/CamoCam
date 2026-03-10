@@ -34,7 +34,7 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
 
                 // Illustration
                 Image.asset(
-                  'assets/images/create_camouflage.png', 
+                  'assets/images/create_camouflage.png',
                   height: 250,
                   width: 350,
                   fit: BoxFit.contain,
@@ -47,7 +47,6 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                     );
                   },
                 ),
-
 
                 const SizedBox(height: 28),
 
@@ -92,7 +91,11 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     label: Text(
                       'Generate Camo Pattern',
                       style: GoogleFonts.montserrat(
@@ -127,7 +130,11 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.collections_bookmark_outlined, color: Color(0xFF4A7C59), size: 20),
+                    icon: const Icon(
+                      Icons.collections_bookmark_outlined,
+                      color: Color(0xFF4A7C59),
+                      size: 20,
+                    ),
                     label: Text(
                       'Your Pattern Collections',
                       style: GoogleFonts.montserrat(

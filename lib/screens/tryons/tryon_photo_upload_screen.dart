@@ -159,75 +159,75 @@ class _TryonPhotoUploadScreenState extends State<TryonPhotoUploadScreen> {
                       width: imageSize,
                       height: imageSize,
                       margin: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _selectedImage == null
-                        ? GestureDetector(
-                            onTap: _showImageSourceDialog,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: const Color(0xFF797777),
-                                  width: 2,
-                                  style: BorderStyle.solid,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: DashedBorder(
-                                child: Center(
-                                  child: Icon(
-                                    Icons.add_circle_outline,
-                                    size: 64,
-                                    color: Colors.grey[400],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Stack(
-                            children: [
-                              Container(
+                      child: _selectedImage == null
+                          ? GestureDetector(
+                              onTap: _showImageSourceDialog,
+                              child: Container(
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color: const Color(0xFF4A7C59),
-                                    width: 3,
+                                    color: const Color(0xFF797777),
+                                    width: 2,
+                                    style: BorderStyle.solid,
                                   ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(7),
-                                  child: Image.file(
-                                    _selectedImage!,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedImage = null;
-                                    });
-                                  },
-                                  child: Container(
-                                    width: 32,
-                                    height: 32,
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.6),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 20,
+                                child: DashedBorder(
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.add_circle_outline,
+                                      size: 64,
+                                      color: Colors.grey[400],
                                     ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            )
+                          : Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: const Color(0xFF4A7C59),
+                                      width: 3,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(7),
+                                    child: Image.file(
+                                      _selectedImage!,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedImage = null;
+                                      });
+                                    },
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.6),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ),
@@ -254,7 +254,11 @@ class _TryonPhotoUploadScreenState extends State<TryonPhotoUploadScreen> {
                                   );
                                 }
                               : null,
-                          icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           label: Text(
                             'Apply',
                             style: GoogleFonts.montserrat(
@@ -281,7 +285,11 @@ class _TryonPhotoUploadScreenState extends State<TryonPhotoUploadScreen> {
                         height: 50,
                         child: OutlinedButton.icon(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A7C59), size: 18),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Color(0xFF4A7C59),
+                            size: 18,
+                          ),
                           label: Text(
                             'Go Back',
                             style: GoogleFonts.montserrat(
@@ -291,7 +299,10 @@ class _TryonPhotoUploadScreenState extends State<TryonPhotoUploadScreen> {
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF8FC0A9), width: 2),
+                            side: const BorderSide(
+                              color: Color(0xFF8FC0A9),
+                              width: 2,
+                            ),
                             backgroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
