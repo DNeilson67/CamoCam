@@ -163,7 +163,7 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                               width: 2,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
@@ -181,7 +181,7 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                     // Next Button
                     Expanded(
                       child: SizedBox(
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
@@ -196,7 +196,7 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF68B0AB),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
                           ),

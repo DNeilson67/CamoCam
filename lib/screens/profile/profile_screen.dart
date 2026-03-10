@@ -257,17 +257,24 @@ class ProfileScreen extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFCF3017),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 0,
                       ),
-                      child: Text(
-                        'Log Out',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFE9E5),
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.logout, color: Color(0xFFFFE9E5), size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Log Out',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFFFE9E5),
+                            ),
+                          ),
+                        ],
                       ),
                   ),
                 ),

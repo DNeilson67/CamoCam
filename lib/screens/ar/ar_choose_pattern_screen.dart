@@ -247,8 +247,8 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                 top: false,
                 child: SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
+                  height: 50,
+                  child: ElevatedButton.icon(
                     onPressed: _selectedPatternIndex != null
                         ? () {
                             final selectedPattern =
@@ -264,23 +264,23 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                             );
                           }
                         : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF68B0AB),
-                      disabledBackgroundColor: const Color(
-                        0xFF68B0AB,
-                      ).withOpacity(0.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    child: Text(
-                      'Apply now',
+                    icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                    label: Text(
+                      'Apply Now',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                         height: 1.14,
                       ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF68B0AB),
+                      disabledBackgroundColor: const Color(0xFF68B0AB).withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
                     ),
                   ),
                 ),

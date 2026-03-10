@@ -137,7 +137,7 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
                     // Preview Button
                     Expanded(
                       child: SizedBox(
-                        height: 48,
+                        height: 50,
                         child: OutlinedButton(
                           onPressed: () {
                             showDialog(
@@ -160,7 +160,7 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
                               width: 2,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
@@ -178,7 +178,7 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
                     // Next Button
                     Expanded(
                       child: SizedBox(
-                        height: 48,
+                        height: 50,
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
@@ -193,7 +193,7 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF68B0AB),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
                           ),

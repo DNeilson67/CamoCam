@@ -224,8 +224,8 @@ class HomeScreenContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
               width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
+              height: 50,
+              child: ElevatedButton.icon(
                 onPressed: () {
                   if (onNavigateToPatternGenerator != null) {
                     onNavigateToPatternGenerator!();
@@ -238,30 +238,21 @@ class HomeScreenContent extends StatelessWidget {
                     );
                   }
                 },
+                icon: const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                label: Text(
+                  'Generate Camouflage',
+                  style: AppTextStyles.button.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryButton,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Generate Camouflage',
-                      style: AppTextStyles.button.copyWith(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -644,8 +635,8 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
               width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
+              height: 50,
+              child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -654,30 +645,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
+                icon: const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+                label: Text(
+                  'Generate Camouflage',
+                  style: AppTextStyles.button.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryButton,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Generate Camouflage',
-                      style: AppTextStyles.button.copyWith(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ),

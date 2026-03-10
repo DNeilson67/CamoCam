@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'pattern_collections_screen.dart';
 import 'collect_images_screen.dart';
 
-class PatternResultScreen extends StatelessWidget {
+class PatternResultScreen extends StatefulWidget {
   final List<File> images;
   final int patternNumber;
 
@@ -13,6 +13,83 @@ class PatternResultScreen extends StatelessWidget {
     required this.images,
     required this.patternNumber,
   });
+
+  @override
+  State<PatternResultScreen> createState() => _PatternResultScreenState();
+}
+
+class _PatternResultScreenState extends State<PatternResultScreen> {
+  late String _patternName;
+
+  @override
+  void initState() {
+    super.initState();
+    _patternName = 'Pattern #${widget.patternNumber}';
+  }
+
+  void _showRenameDialog() {
+    final controller = TextEditingController(text: _patternName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Rename Pattern',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: 'Enter pattern name',
+            hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF4A7C59), width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+          ),
+          style: GoogleFonts.montserrat(),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.montserrat(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) setState(() => _patternName = newName);
+              Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A7C59),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'Save',
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,169 +113,187 @@ class PatternResultScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.only(left: 42, right: 42, bottom: 84),
-            child: Column(
-              children: [
-                const SizedBox(height: 24),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final squareSize = (constraints.maxWidth - 48) * 0.7;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 28),
 
-                // Pattern name with edit icon
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Pattern #$patternNumber',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF292929),
-                        height: 1.0,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.edit_outlined,
-                      size: 21,
-                      color: Color(0xFF292929),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 18),
-
-                // Generated pattern display
-                Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: const Color(0xFF4A7C59),
-                      width: 5,
+                  // Pattern name with tappable edit
+                  GestureDetector(
+                    onTap: _showRenameDialog,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _patternName,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF292929),
+                              height: 1.0,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.edit_outlined,
+                          size: 20,
+                          color: Color(0xFF4A7C59),
+                        ),
+                      ],
                     ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      'https://www.figma.com/api/mcp/asset/7eb0e7a5-19b9-423c-b88b-2d434a7fbe2e',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(Icons.pattern, size: 80),
+
+                  const SizedBox(height: 20),
+
+                  // Generated pattern preview — explicit square
+                  SizedBox(
+                    width: squareSize,
+                    height: squareSize,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFF4A7C59),
+                          width: 5,
+                        ),
+                        color: Colors.grey[200],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: const Center(
+                          child: Icon(
+                            Icons.pattern,
+                            size: 100,
+                            color: Color(0xFF4A7C59),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Title
+                  Text(
+                    'Your unique pattern is ready!',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF292929),
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Description
+                  Text(
+                    'Go to your collections or regenerate for another camouflage pattern.',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF727272),
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Save to Collections Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PatternCollectionsScreen(),
                           ),
                         );
                       },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 41),
-
-                // Title
-                Text(
-                  'Your unique pattern is ready!',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF292929),
-                    height: 1.0,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 9),
-
-                // Description
-                Text(
-                  'This is your unique pattern. Save it to your library or regenerate for another camouflage pattern',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF727272),
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 73),
-
-                // Save to Collections Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Save pattern logic here
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PatternCollectionsScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF68B0AB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'save to collections',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                      icon: const Icon(
+                        Icons.collections,
                         color: Colors.white,
-                        height: 1.14,
+                        size: 20,
                       ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 9),
-
-                // Generate New Pattern Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CollectImagesScreen(),
+                      label: Text(
+                        'Go to Collections',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          height: 1.14,
                         ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(
-                        color: Color(0xFF8FC0A9),
-                        width: 2,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      backgroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      'Generate new pattern',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF1A1A1A),
-                        height: 1.14,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF68B0AB),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
                       ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
+                  const SizedBox(height: 10),
+
+                  // Generate New Pattern Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CollectImagesScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Color(0xFF4A7C59),
+                        size: 20,
+                      ),
+                      label: Text(
+                        'Generate New Pattern',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1A1A1A),
+                          height: 1.14,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xFF8FC0A9),
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

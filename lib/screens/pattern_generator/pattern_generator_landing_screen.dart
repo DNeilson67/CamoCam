@@ -82,8 +82,8 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                 // Generate Camo Pattern Button
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
+                  height: 50,
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -92,22 +92,22 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF68B0AB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.25),
-                    ),
-                    child: Text(
+                    icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+                    label: Text(
                       'Generate Camo Pattern',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                         height: 1.14,
                       ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF68B0AB),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
                     ),
                   ),
                 ),
@@ -117,8 +117,8 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                 // Pattern Collections Button
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
+                  height: 50,
+                  child: OutlinedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -127,26 +127,25 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                         ),
                       );
                     },
+                    icon: const Icon(Icons.collections_bookmark_outlined, color: Color(0xFF4A7C59), size: 20),
+                    label: Text(
+                      'Your Pattern Collections',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A1A),
+                        height: 1.14,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(
                         color: Color(0xFF8FC0A9),
                         width: 2,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       backgroundColor: Colors.white,
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.25),
-                    ),
-                    child: Text(
-                      'Your Pattern Collections',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF1A1A1A),
-                        height: 1.14,
-                      ),
                     ),
                   ),
                 ),

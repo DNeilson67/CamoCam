@@ -135,17 +135,17 @@ class ArPreviewModelScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // Refresh/Reset Button
+                      // Reset Button
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 50,
+                        height: 50,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           border: Border.all(
                             color: const Color(0xFFE7E7E7),
                             width: 2,
                           ),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.refresh, size: 24),
@@ -160,7 +160,7 @@ class ArPreviewModelScreen extends StatelessWidget {
                       // View 3D Model Button
                       Expanded(
                         child: SizedBox(
-                          height: 48,
+                          height: 50,
                           child: OutlinedButton.icon(
                             onPressed: () {
                               Navigator.push(
@@ -193,7 +193,7 @@ class ArPreviewModelScreen extends StatelessWidget {
                                 width: 2,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               backgroundColor: Colors.white,
                             ),
@@ -205,8 +205,8 @@ class ArPreviewModelScreen extends StatelessWidget {
                       // Go AR Mode Button
                       SizedBox(
                         width: 110,
-                        height: 48,
-                        child: ElevatedButton(
+                        height: 50,
+                        child: ElevatedButton.icon(
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -215,19 +215,21 @@ class ArPreviewModelScreen extends StatelessWidget {
                               ),
                             );
                           },
+                          icon: const Icon(Icons.view_in_ar, color: Colors.white, size: 18),
+                          label: Text(
+                            'AR',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF68B0AB),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ),
-                          child: Text(
-                            'AR Mode',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
+                            elevation: 0,
                           ),
                         ),
                       ),
@@ -238,8 +240,8 @@ class ArPreviewModelScreen extends StatelessWidget {
                   // Save to Your Model Button (Full Width)
                   SizedBox(
                     width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
+                    height: 50,
+                    child: ElevatedButton.icon(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -251,19 +253,21 @@ class ArPreviewModelScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4A7C59),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      child: Text(
+                      icon: const Icon(Icons.bookmark_add_outlined, color: Colors.white, size: 18),
+                      label: Text(
                         'Save to Your Model',
                         style: GoogleFonts.montserrat(
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A7C59),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
                       ),
                     ),
                   ),

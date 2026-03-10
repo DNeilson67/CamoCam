@@ -208,8 +208,8 @@ class _TryonChoosePatternScreenState extends State<TryonChoosePatternScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 48),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
+                  height: 50,
+                  child: ElevatedButton.icon(
                     onPressed: selectedPatternIndex != null
                         ? () {
                             Navigator.push(
@@ -224,22 +224,24 @@ class _TryonChoosePatternScreenState extends State<TryonChoosePatternScreen> {
                             );
                           }
                         : null,
+                    icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                    label: Text(
+                      'Apply Now',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: selectedPatternIndex != null
                           ? const Color(0xFF68B0AB)
                           : const Color(0xFFB1BBBA),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
-                    ),
-                    child: Text(
-                      'Apply now',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
-                      ),
+                      disabledBackgroundColor: const Color(0xFFB1BBBA),
                     ),
                   ),
                 ),

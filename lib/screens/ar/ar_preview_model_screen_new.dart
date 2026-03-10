@@ -137,15 +137,15 @@ class ArPreviewModelScreen extends StatelessWidget {
                 children: [
                   // Refresh/Reset Button
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(
                         color: const Color(0xFFE7E7E7),
                         width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
                       icon: const Icon(Icons.refresh, size: 24),
@@ -160,8 +160,8 @@ class ArPreviewModelScreen extends StatelessWidget {
                   // Save to Your Model Button
                   Expanded(
                     child: SizedBox(
-                      height: 48,
-                      child: OutlinedButton(
+                      height: 50,
+                      child: OutlinedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -173,23 +173,24 @@ class ArPreviewModelScreen extends StatelessWidget {
                             ),
                           );
                         },
+                        icon: const Icon(Icons.save_outlined, color: Color(0xFF4A7C59), size: 18),
+                        label: Text(
+                          'Save Model',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1A1A1A),
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: Color(0xFF8FC0A9),
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           backgroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          'Save to your model',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF1A1A1A),
-                          ),
                         ),
                       ),
                     ),
@@ -199,8 +200,8 @@ class ArPreviewModelScreen extends StatelessWidget {
                   // Go AR Mode Button
                   SizedBox(
                     width: 137,
-                    height: 48,
-                    child: ElevatedButton(
+                    height: 50,
+                    child: ElevatedButton.icon(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -209,19 +210,21 @@ class ArPreviewModelScreen extends StatelessWidget {
                           ),
                         );
                       },
+                      icon: const Icon(Icons.view_in_ar, color: Colors.white, size: 18),
+                      label: Text(
+                        'AR Mode',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF68B0AB),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      child: Text(
-                        'Go AR mode',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                        ),
+                        elevation: 0,
                       ),
                     ),
                   ),

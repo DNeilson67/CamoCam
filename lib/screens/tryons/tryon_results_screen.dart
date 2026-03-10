@@ -133,30 +133,31 @@ class TryonResultsScreen extends StatelessWidget {
                   // Restart Button
                   Expanded(
                     child: SizedBox(
-                      height: 48,
-                      child: OutlinedButton(
+                      height: 50,
+                      child: OutlinedButton.icon(
                         onPressed: () {
                           Navigator.of(context).popUntil(
                             (route) => route.isFirst,
                           );
                         },
+                        icon: const Icon(Icons.refresh, color: Color(0xFF4A7C59), size: 18),
+                        label: Text(
+                          'Restart',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1A1A1A),
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: Color(0xFF8FC0A9),
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           backgroundColor: Colors.white,
-                        ),
-                        child: Text(
-                          'Restart',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF1A1A1A),
-                          ),
                         ),
                       ),
                     ),
@@ -167,8 +168,8 @@ class TryonResultsScreen extends StatelessWidget {
                   Expanded(
                     flex: 1,
                     child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
+                      height: 50,
+                      child: ElevatedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -180,19 +181,21 @@ class TryonResultsScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF68B0AB),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Text(
+                        icon: const Icon(Icons.save_alt, color: Colors.white, size: 18),
+                        label: Text(
                           'Save to Gallery',
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
-                            fontWeight: FontWeight.w400,
+                            fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF68B0AB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
                       ),
                     ),
