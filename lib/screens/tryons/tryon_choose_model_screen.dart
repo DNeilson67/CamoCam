@@ -11,12 +11,12 @@ class TryonChooseModelScreen extends StatefulWidget {
 }
 
 class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
-  int currentIndex = 0;
+  int _currentIndex = 0;
 
-  final List<Map<String, String>> models = [
-    {'name': 'Hoodies', 'image': 'assets/images/hoodie.png'},
-    {'name': 'T-Shirt', 'image': 'assets/images/tshirt.png'},
-    {'name': 'Jacket', 'image': 'assets/images/jacket.png'},
+  final List<OutfitItem> _outfits = [
+    OutfitItem(name: 'Hoodie', imagePath: 'assets/images/hoodie.png'),
+    OutfitItem(name: 'T-Shirt', imagePath: 'assets/images/tshirt.png'),
+    OutfitItem(name: 'Jacket', imagePath: 'assets/images/jacket.png'),
   ];
 
   @override
@@ -25,167 +25,203 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF4A7C59),
-        elevation: 0,
         title: Text(
-          'Virtual-TryOn',
+          'Virtual Try-On',
           style: GoogleFonts.montserrat(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
+        elevation: 0,
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final carouselHeight = (constraints.maxHeight * 0.5).clamp(300.0, 425.0);
-            return Column(
-              children: [
-                const SizedBox(height: 32),
-                Text(
-                  'Choose Your Outfit',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 84),
+          child: Column(
+            children: [
+              const SizedBox(height: 32),
+              Text(
+                'Choose Your Outfit',
+                style: GoogleFonts.montserrat(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Select the clothing item you\'d like to try on with camouflage patterns',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      color: const Color(0xFF797777),
-                    ),
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Select the clothing item you want to\ncamouflage and try on',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  color: const Color(0xFF797777),
                 ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: CarouselSlider.builder(
-                    itemCount: models.length,
-                    itemBuilder: (context, index, realIndex) {
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight: carouselHeight,
-                            maxWidth: constraints.maxWidth * 0.7,
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 299 / 425,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Image.asset(
-                                  models[index]['image']!,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.checkroom,
-                                      size: 100,
-                                      color: Colors.grey[400],
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
+              ),
+              const SizedBox(height: 48),
+
+              // Outfit carousel
+              Expanded(
+                child: CarouselSlider.builder(
+                  itemCount: _outfits.length,
+                  itemBuilder: (context, index, realIndex) {
+                    return Center(
+                      child: Container(
+                        height: 300,
+                        width: 300,
+                        child: Image.asset(
+                          _outfits[index].imagePath,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.checkroom,
+                              size: 100,
+                              color: Colors.grey[400],
+                            );
+                          },
                         ),
-                      );
-                    },
-                    options: CarouselOptions(
-                      height: carouselHeight,
+                      ),
+                    );
+                  },
+                  options: CarouselOptions(
+                    height: 300,
                     viewportFraction: 0.8,
                     enlargeCenterPage: true,
-                    enableInfiniteScroll: false,
+                    enableInfiniteScroll: true,
                     onPageChanged: (index, reason) {
                       setState(() {
-                        currentIndex = index;
+                        _currentIndex = index;
                       });
                     },
                   ),
                 ),
               ),
 
-                // Indicator dots
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    models.length,
-                    (index) => Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: currentIndex == index
-                            ? const Color(0xFF4A7C59)
-                            : const Color(0xFFD9D9D9),
-                      ),
+              // Indicator dots
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _outfits.length,
+                  (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentIndex == index
+                          ? const Color(0xFF4A7C59)
+                          : const Color(0xFFD9D9D9),
                     ),
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 16),
-
-                Text(
-                  models[currentIndex]['name']!,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+              const SizedBox(height: 16),
+              Text(
+                _outfits[_currentIndex].name,
+                style: GoogleFonts.montserrat(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
                 ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 43),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TryonChoosePatternScreen(
-                              selectedModel: models[currentIndex]['name']!,
+              ),
+              const SizedBox(height: 32),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    // Preview Button
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(
+                                    _outfits[_currentIndex].imagePath,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                              color: Color(0xFF4A7C59),
+                              width: 2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF68B0AB),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Apply',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
+                          child: Text(
+                            'Preview',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF4A7C59),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    // Next Button
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => TryonChoosePatternScreen(
+                                  selectedModel: _outfits[_currentIndex].name,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF68B0AB),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Next',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-              ],
-            );
-          },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class OutfitItem {
+  final String name;
+  final String imagePath;
+
+  OutfitItem({required this.name, required this.imagePath});
 }

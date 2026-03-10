@@ -101,7 +101,7 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                       shadowColor: Colors.black.withOpacity(0.25),
                     ),
                     child: Text(
-                      'generate camo pattern',
+                      'Generate Camo Pattern',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
@@ -140,7 +140,7 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
                       shadowColor: Colors.black.withOpacity(0.25),
                     ),
                     child: Text(
-                      'your pattern collections',
+                      'Your Pattern Collections',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
