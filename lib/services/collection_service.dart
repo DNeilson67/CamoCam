@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CollectionResponse {
   final int collectionId;
-  final int userId;
+  final String userId;
   final String title;
   final String? patternImageUrl;
   final DateTime createdAt;
@@ -21,7 +22,7 @@ class CollectionResponse {
   factory CollectionResponse.fromJson(Map<String, dynamic> json) {
     return CollectionResponse(
       collectionId: json['collection_id'] as int,
-      userId: json['user_id'] as int,
+      userId: json['user_id'] as String,
       title: json['title'] as String,
       patternImageUrl: json['pattern_image_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -30,17 +31,22 @@ class CollectionResponse {
 }
 
 class CollectionService {
-  static const String _baseUrl = 'http://10.0.2.2:8000';
+  static const String _baseUrl = 'http://10.0.2.2:8000/api';
 
   Future<CollectionResponse> createCollection({
-    required int userId,
     required String title,
     required List<File> images,
   }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
     final uri = Uri.parse('$_baseUrl/collections/');
     final request = http.MultipartRequest('POST', uri);
 
-    request.fields['user_id'] = userId.toString();
+    request.headers['Authorization'] = 'Bearer $token';
     request.fields['title'] = title;
 
     for (final image in images) {

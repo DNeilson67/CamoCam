@@ -7,14 +7,8 @@ import 'pattern_result_screen.dart';
 class LoadingScreen extends StatefulWidget {
   final List<File> images;
   final String title;
-  final int userId;
 
-  const LoadingScreen({
-    super.key,
-    required this.images,
-    required this.title,
-    this.userId = 1,
-  });
+  const LoadingScreen({super.key, required this.images, required this.title});
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
@@ -30,7 +24,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Future<void> _generatePattern() async {
     try {
       final result = await CollectionService().createCollection(
-        userId: widget.userId,
         title: widget.title,
         images: widget.images,
       );
