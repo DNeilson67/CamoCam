@@ -1,17 +1,18 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'pattern_collections_screen.dart';
 import 'collect_images_screen.dart';
 
 class PatternResultScreen extends StatefulWidget {
-  final List<File> images;
-  final int patternNumber;
+  final String patternTitle;
+  final String? patternImageUrl;
+  final int collectionId;
 
   const PatternResultScreen({
     super.key,
-    required this.images,
-    required this.patternNumber,
+    required this.patternTitle,
+    this.patternImageUrl,
+    required this.collectionId,
   });
 
   @override
@@ -24,7 +25,7 @@ class _PatternResultScreenState extends State<PatternResultScreen> {
   @override
   void initState() {
     super.initState();
-    _patternName = 'Pattern #${widget.patternNumber}';
+    _patternName = widget.patternTitle;
   }
 
   void _showRenameDialog() {
@@ -169,13 +170,36 @@ class _PatternResultScreenState extends State<PatternResultScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(13),
-                        child: const Center(
-                          child: Icon(
-                            Icons.pattern,
-                            size: 100,
-                            color: Color(0xFF4A7C59),
-                          ),
-                        ),
+                        child: widget.patternImageUrl != null
+                            ? Image.network(
+                                widget.patternImageUrl!,
+                                fit: BoxFit.cover,
+                                loadingBuilder: (_, child, progress) =>
+                                    progress == null
+                                    ? child
+                                    : const Center(
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Color(0xFF4A7C59),
+                                              ),
+                                        ),
+                                      ),
+                                errorBuilder: (_, __, ___) => const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 60,
+                                    color: Color(0xFF4A7C59),
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: Icon(
+                                  Icons.pattern,
+                                  size: 100,
+                                  color: Color(0xFF4A7C59),
+                                ),
+                              ),
                       ),
                     ),
                   ),

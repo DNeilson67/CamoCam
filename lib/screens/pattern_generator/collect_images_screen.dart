@@ -216,16 +216,75 @@ class _CollectImagesScreenState extends State<CollectImagesScreen> {
   bool get _canGenerate => _imageCount > 0;
 
   void _generatePattern() {
-    if (_canGenerate) {
+    if (!_canGenerate) return;
+    final titleController = TextEditingController(text: 'My Pattern');
+    showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Name Your Pattern',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: titleController,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: 'e.g. Forest Camo',
+            hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF4A7C59), width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+          ),
+          style: GoogleFonts.montserrat(),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.montserrat(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, titleController.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A7C59),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'Generate',
+              style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).then((title) {
+      if (title == null || title.isEmpty) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => LoadingScreen(
             images: _images.where((img) => img != null).cast<File>().toList(),
+            title: title,
           ),
         ),
       );
-    }
+    });
   }
 
   @override

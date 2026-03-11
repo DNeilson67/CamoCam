@@ -1,12 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/collection_service.dart';
 import 'pattern_result_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
   final List<File> images;
+  final String title;
+  final int userId;
 
-  const LoadingScreen({super.key, required this.images});
+  const LoadingScreen({
+    super.key,
+    required this.images,
+    required this.title,
+    this.userId = 1,
+  });
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
@@ -16,23 +24,36 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _simulatePatternGeneration();
+    _generatePattern();
   }
 
-  Future<void> _simulatePatternGeneration() async {
-    // Simulate pattern generation (replace with actual ML processing)
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PatternResultScreen(
-            images: widget.images,
-            patternNumber: 1, // This should be dynamic in real app
-          ),
-        ),
+  Future<void> _generatePattern() async {
+    try {
+      final result = await CollectionService().createCollection(
+        userId: widget.userId,
+        title: widget.title,
+        images: widget.images,
       );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PatternResultScreen(
+              patternTitle: result.title,
+              patternImageUrl: result.patternImageUrl,
+              collectionId: result.collectionId,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pattern generation failed: ${e.toString()}')),
+        );
+      }
     }
   }
 
