@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../screens/main_layout.dart';
 import '../../../services/auth/auth_services.dart';
 
 class OnboardingButton extends StatefulWidget {
@@ -101,12 +100,7 @@ class _OnboardingButtonState extends State<OnboardingButton> {
                       debugPrint("Email: ${user.email}");
 
                       if (context.mounted) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MainLayout(),
-                          ),
-                        );
+                        Navigator.of(context).pushReplacementNamed('/main');
                       }
                     }
                   } catch (e) {

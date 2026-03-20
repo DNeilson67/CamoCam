@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'screens/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/main_layout.dart';
 
@@ -48,7 +49,11 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFFAF9F8),
       ),
-      home: const SafeArea(child: OnboardingScreen()),
+      home: const SafeArea(child: HomeScreen()),
+      routes: {
+        '/onboarding': (context) => const SafeArea(child: OnboardingScreen()),
+        '/main': (context) => const MainLayout(),
+      },
     );
   }
 }

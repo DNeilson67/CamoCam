@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../onboarding/onboarding_screen.dart';
 import 'saved_models_screen.dart';
 
@@ -21,6 +23,12 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+
+    final displayName = user?.userMetadata?['full_name'] ?? 'User';
+    final email = user?.email ?? 'No email';
+    final photoUrl = user?.userMetadata?['avatar_url'];
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -62,21 +70,24 @@ class ProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        // Profile Icon
-                        Container(
-                          width: 57,
-                          height: 57,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            size: 32,
-                            color: Color(0xFF68B0AB),
-                          ),
+                        // Profile Avatar
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.white,
+                          backgroundImage: photoUrl != null
+                              ? NetworkImage(photoUrl)
+                              : null,
+                          child: photoUrl == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 32,
+                                  color: Color(0xFF68B0AB),
+                                )
+                              : null,
                         ),
+
                         const SizedBox(width: 11),
+
                         // User Info
                         Expanded(
                           child: Column(
@@ -84,38 +95,22 @@ class ProfileScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'Davin Neilson',
+                                displayName,
                                 style: GoogleFonts.dmSans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   height: 1.3,
-                                  letterSpacing: 0.3,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      offset: const Offset(0, 1),
-                                      blurRadius: 2,
-                                    ),
-                                  ],
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'davin.neilson@gmail.com',
+                                email,
                                 style: GoogleFonts.dmSans(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
                                   height: 1.2,
-                                  letterSpacing: 0.2,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.15),
-                                      offset: const Offset(0, 1),
-                                      blurRadius: 2,
-                                    ),
-                                  ],
                                 ),
                               ),
                             ],
@@ -138,7 +133,6 @@ class ProfileScreen extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF111827),
-                        height: 1.56,
                       ),
                     ),
                     TextButton(
@@ -164,17 +158,16 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Saved Models Grid (3x3)
+                // Saved Models Grid
                 Expanded(
                   child: GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 1,
-                        ),
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
                     itemCount: 9,
                     itemBuilder: (context, index) {
                       return ClipRRect(
@@ -230,9 +223,12 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                             TextButton(
-                              onPressed: () {
-                                Navigator.pop(context); // Close dialog
-                                // Navigate back to onboarding and remove all previous routes
+                              onPressed: () async {
+                                Navigator.pop(context);
+
+                                // 🔥 Proper logout from Supabase
+                                await Supabase.instance.client.auth.signOut();
+
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (context) =>
