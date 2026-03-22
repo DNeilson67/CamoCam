@@ -5,26 +5,65 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'saved_models_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
-  // Sample saved model images
-  final List<String> savedModelImages = const [
-    'assets/images/pattern_1.jpg',
-    'assets/images/pattern_2.png',
-    'assets/images/pattern_3.png',
-    'assets/images/pattern_4.png',
-    'assets/images/pattern_5.png',
-    'assets/images/pattern_6.png',
-    'assets/images/pattern_1.jpg',
-    'assets/images/pattern_2.png',
-    'assets/images/pattern_3.png',
-  ];
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  List<String> _savedModelUrls = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSavedModels();
+  }
+
+  Future<void> _fetchSavedModels() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+
+      if (userId == null) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+
+      final List<FileObject> files = await supabase.storage
+          .from('camouflage-patterns')       // ✅ same bucket
+          .list(
+            path: 'user_$userId',            // ✅ same folder structure
+            searchOptions: const SearchOptions(
+              limit: 9,                      // only load 9 for the preview
+              offset: 0,
+            ),
+          );
+
+      final urls = files
+          .where((f) => f.name != '.emptyFolderPlaceholder')
+          .map((f) => supabase.storage
+              .from('camouflage-patterns')
+              .getPublicUrl('user_$userId/${f.name}'))
+          .toList();
+
+      if (mounted) {                         // ✅ check before setState
+        setState(() {
+          _savedModelUrls = urls;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching saved models: $e');
+      if (mounted) setState(() => _isLoading = false); // ✅ check here too
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-
     final displayName = user?.userMetadata?['full_name'] ?? 'User';
     final email = user?.email ?? 'No email';
     final photoUrl = user?.userMetadata?['avatar_url'];
@@ -51,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // User Info Card
+                // User Info Card (unchanged)
                 Container(
                   width: double.infinity,
                   height: 89,
@@ -70,49 +109,27 @@ class ProfileScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        // Profile Avatar
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: Colors.white,
-                          backgroundImage: photoUrl != null
-                              ? NetworkImage(photoUrl)
-                              : null,
+                          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
                           child: photoUrl == null
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 32,
-                                  color: Color(0xFF68B0AB),
-                                )
+                              ? const Icon(Icons.person, size: 32, color: Color(0xFF68B0AB))
                               : null,
                         ),
-
                         const SizedBox(width: 11),
-
-                        // User Info
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                displayName,
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.3,
-                                ),
-                              ),
+                              Text(displayName,
+                                  style: GoogleFonts.dmSans(
+                                      fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                               const SizedBox(height: 4),
-                              Text(
-                                email,
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  height: 1.2,
-                                ),
-                              ),
+                              Text(email,
+                                  style: GoogleFonts.dmSans(
+                                      fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                             ],
                           ),
                         ),
@@ -123,35 +140,19 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // Your Saved Models Section Header
+                // Section Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Your Saved Models',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF111827),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SavedModelsScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'View All',
+                    Text('Your Saved Models',
                         style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF4A7C59),
-                        ),
-                      ),
+                            fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+                    TextButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const SavedModelsScreen())),
+                      child: Text('View All',
+                          style: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF4A7C59))),
                     ),
                   ],
                 ),
@@ -160,40 +161,51 @@ class ProfileScreen extends StatelessWidget {
 
                 // Saved Models Grid
                 Expanded(
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                    ),
-                    itemCount: 9,
-                    itemBuilder: (context, index) {
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          savedModelImages[index],
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.image,
-                                size: 40,
-                                color: Colors.grey,
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _savedModelUrls.isEmpty
+                          ? Center(
+                              child: Text('No saved models yet',
+                                  style: GoogleFonts.inter(color: Colors.grey)),
+                            )
+                          : GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                              itemCount: _savedModelUrls.length,
+                              itemBuilder: (context, index) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    _savedModelUrls[index],
+                                    fit: BoxFit.cover,
+                                    // Shows a shimmer-like placeholder while loading
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: const Center(
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[300],
+                                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // Log Out Button
+                // Log Out Button (unchanged)
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -202,48 +214,26 @@ class ProfileScreen extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text(
-                            'Log Out',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          content: Text(
-                            'Are you sure you want to log out?',
-                            style: GoogleFonts.montserrat(),
-                          ),
+                          title: Text('Log Out', style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
+                          content: Text('Are you sure you want to log out?', style: GoogleFonts.montserrat()),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text(
-                                'Cancel',
-                                style: GoogleFonts.montserrat(
-                                  color: const Color(0xFF797777),
-                                ),
-                              ),
+                              child: Text('Cancel',
+                                  style: GoogleFonts.montserrat(color: const Color(0xFF797777))),
                             ),
                             TextButton(
                               onPressed: () async {
                                 Navigator.pop(context);
-
-                                // 🔥 Proper logout from Supabase
                                 await Supabase.instance.client.auth.signOut();
-
                                 Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const OnboardingScreen(),
-                                  ),
+                                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
                                   (route) => false,
                                 );
                               },
-                              child: Text(
-                                'Log Out',
-                                style: GoogleFonts.montserrat(
-                                  color: const Color(0xFFCF3017),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              child: Text('Log Out',
+                                  style: GoogleFonts.montserrat(
+                                      color: const Color(0xFFCF3017), fontWeight: FontWeight.w600)),
                             ),
                           ],
                         ),
@@ -251,28 +241,17 @@ class ProfileScreen extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFCF3017),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.logout,
-                          color: Color(0xFFFFE9E5),
-                          size: 20,
-                        ),
+                        const Icon(Icons.logout, color: Color(0xFFFFE9E5), size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          'Log Out',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFFFE9E5),
-                          ),
-                        ),
+                        Text('Log Out',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFFFFE9E5))),
                       ],
                     ),
                   ),

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PatternDetailScreen extends StatefulWidget {
+  final int collectionId;       // ✅ new
   final String patternName;
   final int patternIndex;
 
   const PatternDetailScreen({
     super.key,
+    required this.collectionId, // ✅ new
     required this.patternName,
     required this.patternIndex,
   });
@@ -17,11 +20,129 @@ class PatternDetailScreen extends StatefulWidget {
 
 class _PatternDetailScreenState extends State<PatternDetailScreen> {
   late String _patternName;
+  String? _patternImageUrl;
+  List<String> _usedImageUrls = [];
+  bool _isLoadingPattern = true;
+  bool _isLoadingImages = true;
+  bool _isRenaming = false;
+
+  final supabase = Supabase.instance.client;
+  String? get _userId => supabase.auth.currentUser?.id;
 
   @override
   void initState() {
     super.initState();
     _patternName = widget.patternName;
+    _fetchPatternImage();
+    _fetchUsedImages();
+  }
+
+  // Fetch pattern image from bucket using collection_id
+  Future<void> _fetchPatternImage() async {
+    try {
+      if (_userId == null) return;
+
+      // File is named "pattern_collection_{id}.jpg" in the bucket
+      final List<FileObject> files = await supabase.storage
+          .from('camouflage-patterns')
+          .list(path: 'user_$_userId');
+
+      // Match by collection_id number in the filename
+      final match = files.firstWhere(
+        (f) => f.name.contains('collection_${widget.collectionId}'),
+        orElse: () => throw Exception('Pattern file not found'),
+      );
+
+      final url = supabase.storage
+          .from('camouflage-patterns')
+          .getPublicUrl('user_$_userId/${match.name}');
+
+      if (mounted) {
+        setState(() {
+          _patternImageUrl = url;
+          _isLoadingPattern = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching pattern image: $e');
+      if (mounted) setState(() => _isLoadingPattern = false);
+    }
+  }
+
+  // Fetch used images from camouflage-images using collection_id
+  Future<void> _fetchUsedImages() async {
+    try {
+      if (_userId == null) return;
+
+      // Folder is named "collection_{id}" in camouflage-images
+      final folderPath = 'user_$_userId/collection_${widget.collectionId}';
+      debugPrint('Fetching used images from: $folderPath');
+
+      final List<FileObject> files = await supabase.storage
+          .from('camouflage-images')
+          .list(path: folderPath);
+
+      final urls = files
+          .where((f) => f.name != '.emptyFolderPlaceholder')
+          .map((f) => supabase.storage
+              .from('camouflage-images')
+              .getPublicUrl('$folderPath/${f.name}'))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          _usedImageUrls = urls;
+          _isLoadingImages = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching used images: $e');
+      if (mounted) setState(() => _isLoadingImages = false);
+    }
+  }
+
+  // Rename: update ONLY the title in the database
+  Future<void> _renamePattern(String newName) async {
+    if (newName == _patternName) return;
+    if (mounted) setState(() => _isRenaming = true);
+
+    try {
+      // Update title in collections table — no bucket changes needed
+      await supabase
+          .from('collections')
+          .update({'title': newName})
+          .eq('collection_id', widget.collectionId)
+          .eq('user_id', _userId!);
+
+      debugPrint('Title updated to "$newName" for collection_id=${widget.collectionId}');
+
+      if (mounted) {
+        setState(() {
+          _patternName = newName;
+          _isRenaming = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Renamed to "$newName"', style: GoogleFonts.montserrat()),
+            backgroundColor: const Color(0xFF4A7C59),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error renaming: $e');
+      if (mounted) {
+        setState(() => _isRenaming = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to rename.', style: GoogleFonts.montserrat()),
+            backgroundColor: const Color(0xFFCF3017),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showRenameDialog() {
@@ -30,10 +151,8 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Rename Pattern',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-        ),
+        title: Text('Rename Pattern',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -46,10 +165,8 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF4A7C59), width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           style: GoogleFonts.montserrat(),
         ),
@@ -57,31 +174,26 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.montserrat(color: Colors.grey[600]),
-            ),
+            child: Text('Cancel',
+                style: GoogleFonts.montserrat(color: Colors.grey[600])),
           ),
           ElevatedButton(
             onPressed: () {
               final newName = controller.text.trim();
-              if (newName.isNotEmpty) setState(() => _patternName = newName);
               Navigator.pop(ctx);
+              if (newName.isNotEmpty && newName != _patternName) {
+                _renamePattern(newName);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4A7C59),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+                  borderRadius: BorderRadius.circular(8)),
               elevation: 0,
             ),
-            child: Text(
-              'Save',
-              style: GoogleFonts.montserrat(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text('Save',
+                style: GoogleFonts.montserrat(
+                    color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -90,14 +202,6 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Sample images for the pattern
-    final List<String> imageUrls = [
-      'https://www.figma.com/api/mcp/asset/2537e162-7219-4cdb-bb9f-3dc2454d39b3',
-      'https://www.figma.com/api/mcp/asset/9d69d439-b79b-4f84-b3a1-c9a1d63e57c4',
-      'https://www.figma.com/api/mcp/asset/56c1fdfc-9b70-42e2-94f9-ddb3dc66374b',
-      'https://www.figma.com/api/mcp/asset/10bf3164-2399-4792-ab89-44ae4e8354d6',
-    ];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -107,14 +211,11 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Pattern Collections',
-          style: GoogleFonts.montserrat(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text('Pattern Collections',
+            style: GoogleFonts.montserrat(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -128,9 +229,9 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
                   children: [
                     const SizedBox(height: 24),
 
-                    // Pattern name with tappable edit icon
+                    // ── Pattern name + rename icon ──────────────────────────
                     GestureDetector(
-                      onTap: _showRenameDialog,
+                      onTap: _isRenaming ? null : _showRenameDialog,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -142,24 +243,28 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: const Color(0xFF292929),
-                                height: 1.0,
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(
-                            Icons.edit_outlined,
-                            size: 20,
-                            color: Color(0xFF4A7C59),
-                          ),
+                          _isRenaming
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF4A7C59)),
+                                )
+                              : const Icon(Icons.edit_outlined,
+                                  size: 20, color: Color(0xFF4A7C59)),
                         ],
                       ),
                     ),
 
                     const SizedBox(height: 16),
 
-                    // Pattern preview — explicit square
+                    // ── Big pattern preview from camouflage-patterns ────────
                     SizedBox(
                       width: squareSize,
                       height: squareSize,
@@ -167,76 +272,79 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
                           border: Border.all(
-                            color: const Color(0xFF4A7C59),
-                            width: 5,
-                          ),
+                              color: const Color(0xFF4A7C59), width: 5),
+                          color: Colors.grey[200],
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            'https://www.figma.com/api/mcp/asset/e29b790b-13f6-4085-aab8-d2d2c482f105',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(Icons.pattern, size: 60),
-                                ),
-                              );
-                            },
-                          ),
+                          child: _isLoadingPattern
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                      color: Color(0xFF4A7C59)))
+                              : _patternImageUrl != null
+                                  ? Image.network(
+                                      _patternImageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Center(
+                                              child: Icon(Icons.broken_image,
+                                                  size: 60,
+                                                  color: Color(0xFF4A7C59))),
+                                    )
+                                  : const Center(
+                                      child: Icon(Icons.pattern,
+                                          size: 60, color: Color(0xFF4A7C59))),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Used Images Title
-                    Text(
-                      'Used Images',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF292929),
-                        height: 1.2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                    // ── Used Images from camouflage-images ─────────────────
+                    Text('Used Images',
+                        style: GoogleFonts.montserrat(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF292929)),
+                        textAlign: TextAlign.center),
 
                     const SizedBox(height: 16),
 
-                    // Image Grid
-                    _buildImageGrid(imageUrls),
+                    _isLoadingImages
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF4A7C59)),
+                          )
+                        : _usedImageUrls.isEmpty
+                            ? Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 32),
+                                child: Text('No images found.',
+                                    style: GoogleFonts.montserrat(
+                                        color: Colors.grey)),
+                              )
+                            : _buildImageGrid(_usedImageUrls),
 
                     const SizedBox(height: 20),
 
-                    // Delete Button
+                    // ── Delete button ───────────────────────────────────────
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          _showDeleteConfirmation(context);
-                        },
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Color(0xFFFFE9E5),
-                          size: 20,
-                        ),
-                        label: Text(
-                          'Delete',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFFFFE9E5),
-                            height: 1.14,
-                          ),
-                        ),
+                        onPressed: () => _showDeleteConfirmation(context),
+                        icon: const Icon(Icons.delete_outline,
+                            color: Color(0xFFFFE9E5), size: 20),
+                        label: Text('Delete',
+                            style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFFFE9E5))),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFCF3017),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                              borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
                       ),
@@ -265,34 +373,29 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
     );
   }
 
-  Widget _buildImageRow(
-    List<String> imageUrls,
-    int index1,
-    int index2,
-    int index3,
-  ) {
+  Widget _buildImageRow(List<String> imageUrls, int i1, int i2, int i3) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(child: _buildImageSlot(imageUrls, index1)),
+        Expanded(child: _buildImageSlot(imageUrls, i1)),
         const SizedBox(width: 10),
-        Expanded(child: _buildImageSlot(imageUrls, index2)),
+        Expanded(child: _buildImageSlot(imageUrls, i2)),
         const SizedBox(width: 10),
-        Expanded(child: _buildImageSlot(imageUrls, index3)),
+        Expanded(child: _buildImageSlot(imageUrls, i3)),
       ],
     );
   }
 
   Widget _buildImageSlot(List<String> imageUrls, int index) {
     final hasImage = index < imageUrls.length;
-
     return AspectRatio(
       aspectRatio: 1,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: hasImage ? const Color(0xFF4A7C59) : const Color(0xFF797777),
+            color: hasImage
+                ? const Color(0xFF4A7C59)
+                : const Color(0xFF797777),
             width: 2,
           ),
         ),
@@ -302,48 +405,118 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
                 child: Image.network(
                   imageUrls[index],
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image, size: 40),
-                    );
-                  },
-                ),
-              )
-            : Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFF797777),
-                    width: 2,
-                    style: BorderStyle.values[1],
+                  loadingBuilder: (_, child, progress) => progress == null
+                      ? child
+                      : Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Color(0xFF4A7C59)),
+                          ),
+                        ),
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, size: 40),
                   ),
                 ),
-              ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
 
+  Future<void> _deletePattern() async {
+  try {
+    if (_userId == null) return;
+
+    // Step 1: Delete row from collections table
+    await supabase
+        .from('collections')
+        .delete()
+        .eq('collection_id', widget.collectionId)
+        .eq('user_id', _userId!);
+
+    debugPrint('Deleted row for collection_id=${widget.collectionId}');
+
+    // Step 2: Find and delete the pattern file from camouflage-patterns
+    final List<FileObject> patternFiles = await supabase.storage
+        .from('camouflage-patterns')
+        .list(path: 'user_$_userId');
+
+    final match = patternFiles
+        .where((f) => f.name.contains('collection_${widget.collectionId}'))
+        .toList();
+
+    if (match.isNotEmpty) {
+      await supabase.storage
+          .from('camouflage-patterns')
+          .remove(match
+              .map((f) => 'user_$_userId/${f.name}')
+              .toList());
+      debugPrint('Deleted pattern file: ${match.first.name}');
+    }
+
+    // Step 3: Delete all images inside the collection folder
+    // from camouflage-images (Supabase has no folder delete — remove each file)
+    final folderPath = 'user_$_userId/collection_${widget.collectionId}';
+    final List<FileObject> imageFiles = await supabase.storage
+        .from('camouflage-images')
+        .list(path: folderPath);
+
+    final validImages = imageFiles
+        .where((f) => f.name != '.emptyFolderPlaceholder')
+        .toList();
+
+    if (validImages.isNotEmpty) {
+      await supabase.storage
+          .from('camouflage-images')
+          .remove(validImages
+              .map((f) => '$folderPath/${f.name}')
+              .toList());
+      debugPrint('Deleted ${validImages.length} images from $folderPath');
+    }
+
+    if (mounted) Navigator.pop(context); // go back to collections
+  } catch (e) {
+    debugPrint('Error deleting pattern: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete pattern.',
+              style: GoogleFonts.montserrat()),
+          backgroundColor: const Color(0xFFCF3017),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+}
+
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Pattern'),
-        content: Text('Are you sure you want to delete $_patternName?'),
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Pattern',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
+        content: Text(
+          'Are you sure you want to delete "$_patternName"? This cannot be undone.',
+          style: GoogleFonts.montserrat(),
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.montserrat(color: Colors.grey[600])),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to collections
+              Navigator.pop(ctx); // close dialog
+              _deletePattern();   // then delete
             },
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Color(0xFFCF3017)),
-            ),
+            child: Text('Delete',
+                style: GoogleFonts.montserrat(
+                    color: const Color(0xFFCF3017),
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
