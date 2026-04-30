@@ -64,8 +64,9 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
         _filteredCollections = _allCollections;
       } else {
         _filteredCollections = _allCollections
-            .where((collection) =>
-                collection.title.toLowerCase().contains(query))
+            .where(
+              (collection) => collection.title.toLowerCase().contains(query),
+            )
             .toList();
       }
     });
@@ -89,9 +90,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
-                color: const Color(0xFF4A7C59),
-              ),
+              CircularProgressIndicator(color: const Color(0xFF4A7C59)),
               const SizedBox(height: 16),
               Text(
                 'Applying pattern...',
@@ -446,8 +445,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
     );
   }
 
-  Widget _buildPatternCard(
-      CollectionDetailResponse collection, int index) {
+  Widget _buildPatternCard(CollectionDetailResponse collection, int index) {
     final isSelected = _selectedCollectionIndex == index;
 
     return GestureDetector(
@@ -498,10 +496,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                       )
                     : Container(
                         color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.image,
-                          color: Colors.grey,
-                        ),
+                        child: const Icon(Icons.image, color: Colors.grey),
                       ),
               ),
             ),

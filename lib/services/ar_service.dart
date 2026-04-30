@@ -127,9 +127,7 @@ class ArService {
   /// Get all available AR items (3D models)
   Future<List<ItemResponse>> getItems() async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/items/'),
-      );
+      final response = await http.get(Uri.parse('$_baseUrl/items/'));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as List<dynamic>;
@@ -139,7 +137,9 @@ class ArService {
             .toList();
       }
 
-      throw Exception('Failed to fetch items (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch items (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching items: $e');
     }
@@ -148,16 +148,16 @@ class ArService {
   /// Get a specific item by ID
   Future<ItemResponse> getItem(int itemId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/items/$itemId'),
-      );
+      final response = await http.get(Uri.parse('$_baseUrl/items/$itemId'));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         return ItemResponse.fromJson(json);
       }
 
-      throw Exception('Failed to fetch item (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch item (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching item: $e');
     }
@@ -185,7 +185,9 @@ class ArService {
             .toList();
       }
 
-      throw Exception('Failed to fetch collections (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch collections (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching collections: $e');
     }
@@ -203,7 +205,9 @@ class ArService {
         return CollectionDetailResponse.fromJson(json);
       }
 
-      throw Exception('Failed to fetch collection (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch collection (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching collection: $e');
     }
@@ -245,7 +249,9 @@ class ArService {
         return AppliedPatternResponse.fromJson(json);
       }
 
-      throw Exception('Failed to apply pattern (${streamed.statusCode}): $body');
+      throw Exception(
+        'Failed to apply pattern (${streamed.statusCode}): $body',
+      );
     } catch (e) {
       throw Exception('Error applying pattern: $e');
     }
@@ -273,7 +279,9 @@ class ArService {
             .toList();
       }
 
-      throw Exception('Failed to fetch applied patterns (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch applied patterns (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching applied patterns: $e');
     }
@@ -281,7 +289,8 @@ class ArService {
 
   /// Get applied patterns for a specific collection
   Future<List<AppliedPatternResponse>> getCollectionAppliedPatterns(
-      int collectionId) async {
+    int collectionId,
+  ) async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
       throw Exception('Not authenticated. Please sign in.');
@@ -302,7 +311,9 @@ class ArService {
             .toList();
       }
 
-      throw Exception('Failed to fetch applied patterns (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch applied patterns (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching applied patterns: $e');
     }
@@ -327,7 +338,9 @@ class ArService {
         return AppliedPatternResponse.fromJson(json);
       }
 
-      throw Exception('Failed to fetch applied pattern (${response.statusCode}): ${response.body}');
+      throw Exception(
+        'Failed to fetch applied pattern (${response.statusCode}): ${response.body}',
+      );
     } catch (e) {
       throw Exception('Error fetching applied pattern: $e');
     }

@@ -133,10 +133,7 @@ class _ArPreviewModelScreenState extends State<ArPreviewModelScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFF8F8F8),
                 border: Border(
-                  top: BorderSide(
-                    color: const Color(0xFFE7E7E7),
-                    width: 2,
-                  ),
+                  top: BorderSide(color: const Color(0xFFE7E7E7), width: 2),
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(15),
