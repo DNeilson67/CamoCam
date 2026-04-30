@@ -1,78 +1,200 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../services/ar_service.dart';
 import 'ar_preview_model_screen.dart';
 
 class ArChoosePatternScreen extends StatefulWidget {
   final String selectedModel;
+  final int selectedItemId;
 
-  const ArChoosePatternScreen({super.key, required this.selectedModel});
+  const ArChoosePatternScreen({
+    super.key,
+    required this.selectedModel,
+    required this.selectedItemId,
+  });
 
   @override
   State<ArChoosePatternScreen> createState() => _ArChoosePatternScreenState();
 }
 
 class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
-  int? _selectedPatternIndex;
+  final ArService _arService = ArService();
+  List<CollectionDetailResponse> _allCollections = [];
+  List<CollectionDetailResponse> _filteredCollections = [];
+  int? _selectedCollectionIndex;
   final TextEditingController _searchController = TextEditingController();
-  List<PatternItem> _filteredPatterns = [];
-
-  final List<PatternItem> _patterns = [
-    PatternItem(
-      id: 1,
-      name: 'Pattern #1',
-      imageCount: 4,
-      imagePath: 'assets/images/pattern_1.jpg',
-    ),
-    PatternItem(
-      id: 2,
-      name: 'Pattern #2',
-      imageCount: 6,
-      imagePath: 'assets/images/pattern_2.png',
-    ),
-    PatternItem(
-      id: 3,
-      name: 'Pattern #3',
-      imageCount: 9,
-      imagePath: 'assets/images/pattern_3.png',
-    ),
-    PatternItem(
-      id: 4,
-      name: 'Pattern #4',
-      imageCount: 9,
-      imagePath: 'assets/images/pattern_4.png',
-    ),
-    PatternItem(
-      id: 5,
-      name: 'Pattern #5',
-      imageCount: 9,
-      imagePath: 'assets/images/pattern_5.png',
-    ),
-    PatternItem(
-      id: 6,
-      name: 'Pattern #6',
-      imageCount: 9,
-      imagePath: 'assets/images/pattern_6.png',
-    ),
-  ];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _filteredPatterns = _patterns;
-    _searchController.addListener(_filterPatterns);
+    _searchController.addListener(_filterCollections);
+    _loadCollections();
   }
 
-  void _filterPatterns() {
+  Future<void> _loadCollections() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final collections = await _arService.getUserCollections();
+      setState(() {
+        _allCollections = collections;
+        _filteredCollections = collections;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _filterCollections() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredPatterns = _patterns;
+        _filteredCollections = _allCollections;
       } else {
-        _filteredPatterns = _patterns
-            .where((pattern) => pattern.name.toLowerCase().contains(query))
+        _filteredCollections = _allCollections
+            .where((collection) =>
+                collection.title.toLowerCase().contains(query))
             .toList();
       }
     });
+  }
+
+  Future<void> _applyPatternAndNavigate() async {
+    if (_selectedCollectionIndex == null) return;
+
+    final selectedCollection = _filteredCollections[_selectedCollectionIndex!];
+
+    // Show loading dialog
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                color: const Color(0xFF4A7C59),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Applying pattern...',
+                style: GoogleFonts.montserrat(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF727272),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Download model file
+      final modelFile = await _downloadFile(
+        'assets/objects/models/helicopter/helicopter.glb',
+        'model.glb',
+      );
+
+      // Call apply pattern and save endpoint
+      final applied = await _arService.applyPatternAndSave(
+        modelFile: modelFile,
+        collectionId: selectedCollection.collectionId,
+      );
+
+      // Clean up temp files
+      await modelFile.delete();
+
+      if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Navigate to preview screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ArPreviewModelScreen(
+            selectedModel: widget.selectedModel,
+            appliedModelUrl: applied.appliedModelUrl,
+            selectedCollectionTitle: selectedCollection.title,
+          ),
+        ),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Pattern applied successfully!',
+              style: GoogleFonts.montserrat(),
+            ),
+            backgroundColor: const Color(0xFF4A7C59),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error applying pattern: ${e.toString().replaceFirst('Exception: ', '')}',
+            style: GoogleFonts.montserrat(),
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<File> _downloadFile(String url, String filename) async {
+    // For local assets, just get them from assets
+    if (url.startsWith('assets/')) {
+      final data = await rootBundle.load(url);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$filename');
+      await file.writeAsBytes(data.buffer.asUint8List());
+      return file;
+    }
+
+    // For remote files
+    final httpClient = HttpClient();
+    try {
+      final request = await httpClient.getUrl(Uri.parse(url));
+      final response = await request.close();
+      final bytes = await response.expand((s) => s).toList();
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$filename');
+      await file.writeAsBytes(bytes);
+      return file;
+    } finally {
+      httpClient.close();
+    }
   }
 
   @override
@@ -190,38 +312,77 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Pattern Grid
-                    _filteredPatterns.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: Text(
-                              'No patterns found',
+                    // Content
+                    if (_isLoading)
+                      Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: CircularProgressIndicator(
+                          color: const Color(0xFF4A7C59),
+                        ),
+                      )
+                    else if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Error loading patterns',
                               style: GoogleFonts.montserrat(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF727272),
+                                color: Colors.red,
                               ),
                               textAlign: TextAlign.center,
                             ),
-                          )
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: 0.78,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadCollections,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4A7C59),
+                              ),
+                              child: Text(
+                                'Retry',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                            itemCount: _filteredPatterns.length,
-                            itemBuilder: (context, index) {
-                              return _buildPatternCard(
-                                _filteredPatterns[index],
-                                index,
-                              );
-                            },
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_filteredCollections.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          'No patterns found',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF727272),
                           ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.78,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                        itemCount: _filteredCollections.length,
+                        itemBuilder: (context, index) {
+                          return _buildPatternCard(
+                            _filteredCollections[index],
+                            index,
+                          );
+                        },
+                      ),
 
                     const SizedBox(height: 80),
                   ],
@@ -248,20 +409,8 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton.icon(
-                    onPressed: _selectedPatternIndex != null
-                        ? () {
-                            final selectedPattern =
-                                _filteredPatterns[_selectedPatternIndex!];
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ArPreviewModelScreen(
-                                  selectedModel: widget.selectedModel,
-                                  selectedPattern: selectedPattern.name,
-                                ),
-                              ),
-                            );
-                          }
+                    onPressed: _selectedCollectionIndex != null
+                        ? _applyPatternAndNavigate
                         : null,
                     icon: const Icon(
                       Icons.check_circle_outline,
@@ -297,13 +446,14 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
     );
   }
 
-  Widget _buildPatternCard(PatternItem pattern, int index) {
-    final isSelected = _selectedPatternIndex == index;
+  Widget _buildPatternCard(
+      CollectionDetailResponse collection, int index) {
+    final isSelected = _selectedCollectionIndex == index;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedPatternIndex = index;
+          _selectedCollectionIndex = index;
         });
       },
       child: Container(
@@ -332,7 +482,27 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                   topLeft: Radius.circular(15),
                   topRight: Radius.circular(15),
                 ),
-                child: Image.asset(pattern.imagePath, fit: BoxFit.cover),
+                child: collection.patternImageUrl != null
+                    ? Image.network(
+                        collection.patternImageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(
+                          Icons.image,
+                          color: Colors.grey,
+                        ),
+                      ),
               ),
             ),
 
@@ -346,7 +516,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      pattern.name,
+                      collection.title,
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -359,7 +529,7 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${pattern.imageCount} images',
+                      '${collection.baseImages.length} images',
                       style: GoogleFonts.montserrat(
                         fontSize: 8,
                         fontWeight: FontWeight.w400,
@@ -385,18 +555,4 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
     _searchController.dispose();
     super.dispose();
   }
-}
-
-class PatternItem {
-  final int id;
-  final String name;
-  final int imageCount;
-  final String imagePath;
-
-  PatternItem({
-    required this.id,
-    required this.name,
-    required this.imageCount,
-    required this.imagePath,
-  });
 }

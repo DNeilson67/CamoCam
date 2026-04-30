@@ -19,16 +19,19 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
       name: 'Helicopter',
       imagePath: 'assets/objects/models/helicopter/helicopter.png',
       modelPath: 'assets/objects/models/helicopter/helicopter.glb',
+      itemId: 1,
     ),
     ModelItem(
       name: 'Jeep',
       imagePath: 'assets/objects/models/jeep/jeep.png',
       modelPath: 'assets/objects/models/jeep/jeep.glb',
+      itemId: 2,
     ),
     ModelItem(
       name: 'Tank',
       imagePath: 'assets/objects/models/tank/tank.png',
       modelPath: 'assets/objects/models/tank/tank.glb',
+      itemId: 3,
     ),
   ];
 
@@ -84,9 +87,8 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                       child: Container(
                         height: 300,
                         width: 300,
-                        // color: Colors.grey[200],
                         child: Image.asset(
-                          _models[index].imagePath, // <-- Local image
+                          _models[index].imagePath,
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -189,6 +191,7 @@ class _ArChooseModelScreenState extends State<ArChooseModelScreen> {
                               MaterialPageRoute(
                                 builder: (_) => ArChoosePatternScreen(
                                   selectedModel: _models[_currentIndex].name,
+                                  selectedItemId: _models[_currentIndex].itemId,
                                 ),
                               ),
                             );
@@ -226,10 +229,12 @@ class ModelItem {
   final String name;
   final String imagePath;
   final String modelPath;
+  final int itemId;
 
   ModelItem({
     required this.name,
     required this.imagePath,
     required this.modelPath,
+    required this.itemId,
   });
 }
