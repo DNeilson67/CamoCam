@@ -1,10 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../services/ar_service.dart';
-import 'ar_preview_model_screen.dart';
+import 'ar_loading_screen.dart';
 
 class ArChoosePatternScreen extends StatefulWidget {
   final String selectedModel;
@@ -72,128 +69,22 @@ class _ArChoosePatternScreenState extends State<ArChoosePatternScreen> {
     });
   }
 
-  Future<void> _applyPatternAndNavigate() async {
+  void _applyPatternAndNavigate() {
     if (_selectedCollectionIndex == null) return;
 
     final selectedCollection = _filteredCollections[_selectedCollectionIndex!];
 
-    // Show loading dialog
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: const Color(0xFF4A7C59)),
-              const SizedBox(height: 16),
-              Text(
-                'Applying pattern...',
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF727272),
-                ),
-              ),
-            ],
-          ),
+    // Navigate to loading screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ArLoadingScreen(
+          selectedModel: widget.selectedModel,
+          selectedItemId: widget.selectedItemId,
+          selectedCollection: selectedCollection,
         ),
       ),
     );
-
-    try {
-      // Download model file
-      final modelFile = await _downloadFile(
-        'assets/objects/models/helicopter/helicopter.glb',
-        'model.glb',
-      );
-
-      // Call apply pattern and save endpoint
-      final applied = await _arService.applyPatternAndSave(
-        modelFile: modelFile,
-        collectionId: selectedCollection.collectionId,
-      );
-
-      // Clean up temp files
-      await modelFile.delete();
-
-      if (!mounted) return;
-
-      // Close loading dialog
-      Navigator.pop(context);
-
-      // Navigate to preview screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ArPreviewModelScreen(
-            selectedModel: widget.selectedModel,
-            appliedModelUrl: applied.appliedModelUrl,
-            selectedCollectionTitle: selectedCollection.title,
-          ),
-        ),
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Pattern applied successfully!',
-              style: GoogleFonts.montserrat(),
-            ),
-            backgroundColor: const Color(0xFF4A7C59),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      // Close loading dialog
-      Navigator.pop(context);
-
-      // Show error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error applying pattern: ${e.toString().replaceFirst('Exception: ', '')}',
-            style: GoogleFonts.montserrat(),
-          ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  Future<File> _downloadFile(String url, String filename) async {
-    // For local assets, just get them from assets
-    if (url.startsWith('assets/')) {
-      final data = await rootBundle.load(url);
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(data.buffer.asUint8List());
-      return file;
-    }
-
-    // For remote files
-    final httpClient = HttpClient();
-    try {
-      final request = await httpClient.getUrl(Uri.parse(url));
-      final response = await request.close();
-      final bytes = await response.expand((s) => s).toList();
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(bytes);
-      return file;
-    } finally {
-      httpClient.close();
-    }
   }
 
   @override
