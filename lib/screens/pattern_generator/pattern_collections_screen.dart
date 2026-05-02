@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,25 +24,24 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  
+  // Timer for debouncing search input
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _fetchPatterns();
 
-    // Live search — re-fetch every time the text changes
-    _searchController.addListener(() {
-      final query = _searchController.text.trim();
-      if (query != _searchQuery) {
-        _searchQuery = query;
-        _resetAndFetch();
-      }
-    });
+    // Listen for search changes with debouncing
+    _searchController.addListener(_onSearchChanged);
 
+    // Infinite scroll listener
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent - 200 &&
           !_isFetchingMore &&
+          !_isLoading &&
           _hasMore) {
         _fetchPatterns();
       }
@@ -50,12 +50,28 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  // Clear list and re-fetch from scratch (used when search query changes)
+  void _onSearchChanged() {
+    // If the user is typing, cancel the previous timer
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Wait 500ms after the user stops typing to trigger the search
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final query = _searchController.text.trim();
+      if (query != _searchQuery) {
+        setState(() {
+          _searchQuery = query;
+        });
+        _resetAndFetch();
+      }
+    });
+  }
+
   void _resetAndFetch() {
     setState(() {
       _patterns.clear();
@@ -67,7 +83,8 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
   }
 
   Future<void> _fetchPatterns() async {
-    if (_isFetchingMore || !_hasMore) return;
+    // Prevent overlapping fetches or fetching when no more data exists
+    if (_isFetchingMore) return;
 
     setState(() {
       _offset == 0 ? _isLoading = true : _isFetchingMore = true;
@@ -78,24 +95,20 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return;
 
+      // Build query dynamically
       var query = supabase
           .from('collections')
           .select('collection_id, title, pattern_image_url')
-          .eq('user_id', userId)
+          .eq('user_id', userId);
+
+      // Apply search filter if query exists
+      if (_searchQuery.isNotEmpty) {
+        query = query.ilike('title', '%$_searchQuery%');
+      }
+
+      final response = await query
           .order('collection_id', ascending: true)
           .range(_offset, _offset + _pageSize - 1);
-
-      // Apply partial search filter if query is not empty
-      // ilike = case-insensitive LIKE, % = wildcard
-      final response = _searchQuery.isEmpty
-          ? await query
-          : await supabase
-              .from('collections')
-              .select('collection_id, title, pattern_image_url')
-              .eq('user_id', userId)
-              .ilike('title', '%$_searchQuery%') // ✅ partial match
-              .order('collection_id', ascending: true)
-              .range(_offset, _offset + _pageSize - 1);
 
       final newPatterns = (response as List).map((row) {
         return {
@@ -107,6 +120,9 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
 
       if (mounted) {
         setState(() {
+          // Double check to clear list if this is a fresh search result
+          if (_offset == 0) _patterns.clear();
+
           _patterns.addAll(newPatterns);
           _offset += newPatterns.length;
           _hasMore = newPatterns.length == _pageSize;
@@ -150,8 +166,7 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
         child: Column(
           children: [
             const SizedBox(height: 17),
-
-            // ── Search Bar ──────────────────────────────────────────────────
+            // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 22),
               child: Container(
@@ -182,8 +197,7 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
-                          // Clear button when there's text
-                          suffixIcon: _searchQuery.isNotEmpty
+                          suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.clear,
                                       size: 18, color: Color(0xFF666666)),
@@ -200,10 +214,8 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // ── Pattern Grid ────────────────────────────────────────────────
+            // Pattern Grid
             Expanded(
               child: _isLoading
                   ? const Center(
@@ -231,7 +243,8 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
                                     children: [
                                       _buildPatternCard(_patterns[i], i),
                                       if (i + 1 < _patterns.length)
-                                        _buildPatternCard(_patterns[i + 1], i + 1)
+                                        _buildPatternCard(
+                                            _patterns[i + 1], i + 1)
                                       else
                                         const SizedBox(width: 175),
                                     ],

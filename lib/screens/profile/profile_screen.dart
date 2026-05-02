@@ -224,13 +224,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             TextButton(
                               onPressed: () async {
-                                Navigator.pop(context);
-                                await Supabase.instance.client.auth.signOut();
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-                                  (route) => false,
-                                );
-                              },
+                                  Navigator.pop(context);
+                                  final navigator = Navigator.of(context); // ✅ save before async
+                                  await Supabase.instance.client.auth.signOut();
+                                  navigator.pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                                    (route) => false,
+                                  );
+                                },
                               child: Text('Log Out',
                                   style: GoogleFonts.montserrat(
                                       color: const Color(0xFFCF3017), fontWeight: FontWeight.w600)),

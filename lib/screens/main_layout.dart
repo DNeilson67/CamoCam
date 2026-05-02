@@ -25,18 +25,24 @@ class _MainLayoutState extends State<MainLayout> {
 
   // Screens for each nav item
   List<Widget> get _screens => [
-    HomeScreenContent(
-      onNavigateToPatternGenerator: () {
-        setState(() {
-          _selectedIndex = 4;
-        });
-      },
-    ), // Home content without navbar
-    const ArChooseModelScreen(), // AR Screen
-    const TryonChooseModelScreen(), // Try-ons Screen
-    const ProfileScreen(), // Profile Screen
-    const PatternGeneratorLandingScreen(), // Pattern Generator
-  ];
+  HomeScreenContent(
+    onNavigateToPatternGenerator: () {
+      setState(() {
+        _selectedIndex = 4;
+      });
+    },
+    // Add this new handler:
+    onNavigateToTab: (index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    },
+  ), 
+  const ArChooseModelScreen(), 
+  const TryonChooseModelScreen(), 
+  const ProfileScreen(), 
+  const PatternGeneratorLandingScreen(), 
+];
 
   void _onNavItemTapped(int index) {
     setState(() {

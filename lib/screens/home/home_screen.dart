@@ -5,13 +5,16 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../pattern_generator/pattern_generator_landing_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-// Content-only version without navbar (used in MainLayout)
+import '../ar/ar_choose_model_screen.dart';
+import '../tryons/tryon_choose_model_screen.dart';
 class HomeScreenContent extends StatelessWidget {
   final VoidCallback? onNavigateToPatternGenerator;
-
-  const HomeScreenContent({super.key, this.onNavigateToPatternGenerator});
-
+  final Function(int)? onNavigateToTab;
+  const HomeScreenContent({
+    super.key, 
+    this.onNavigateToPatternGenerator,
+    this.onNavigateToTab, // Add this
+  });
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,41 +117,42 @@ class HomeScreenContent extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildContentCards(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          // Large Card - Camouflage Generator
-          _buildLargeCard(context),
-
-          const SizedBox(height: 16),
-
-          // Small Cards Row
-          Row(
-            children: [
-              Expanded(
-                child: _buildSmallCard(
-                  title: 'AR Mode',
-                  subtitle: 'See your camouflaged object live',
-                  iconPath: 'assets/images/AR_mode.png',
-                ),
+Widget _buildContentCards(BuildContext context) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: Column(
+      children: [
+        _buildLargeCard(context),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSmallCard(
+                title: 'AR Mode',
+                subtitle: 'See your camouflaged object live',
+                iconPath: 'assets/images/AR_mode.png',
+                onTap: () {
+                  onNavigateToTab?.call(1);
+                },
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSmallCard(
-                  title: 'Virtual Try-on',
-                  subtitle: 'Try your camo clothes in real-time',
-                  iconPath: 'assets/images/Virtual_try_on.png',
-                ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSmallCard(
+                title: 'Virtual Try-on',
+                subtitle: 'Try your camo clothes in real-time',
+                iconPath: 'assets/images/Virtual_try_on.png',
+                onTap: () {
+                  onNavigateToTab?.call(2);
+                },
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildLargeCard(BuildContext context) {
     return Container(
@@ -263,70 +267,60 @@ class HomeScreenContent extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildSmallCard({
-    required String title,
-    required String subtitle,
-    required String iconPath,
-  }) {
-    return Container(
-      height: 174,
+Widget _buildSmallCard({
+  required String title,
+  required String subtitle,
+  required String iconPath,
+  required VoidCallback onTap, // Add this
+}) {
+  return InkWell( // Add InkWell for clickability
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFC8D5B9), width: 2),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon
             Image.asset(
-            iconPath,
-            width: 72,
-            height: 72,
-            fit: BoxFit.contain,
-          ),
-
+              iconPath,
+              width: 72,
+              height: 72,
+              fit: BoxFit.contain,
+              // If using network images in the second version, 
+              // remember to switch between Image.asset and Image.network
+            ),
             const SizedBox(height: 12),
-
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.title.copyWith(
-                  fontSize: 20,
-                  color: const Color(0xFF090814),
-                  height: 1.2,
-                ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.title.copyWith(
+                fontSize: 20,
+                color: const Color(0xFF090814),
+                height: 1.2,
               ),
             ),
-
-            const SizedBox(height: 2),
-
-            // Subtitle
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.description.copyWith(
-                  fontSize: 14,
-                  color: const Color(0xFF666666),
-                  height: 1.35,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.description.copyWith(
+                fontSize: 14,
+                color: const Color(0xFF666666),
+                height: 1.35,
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // Original HomeScreen with navbar (kept for compatibility)
@@ -398,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 14),
 
               // Main Content Cards
-              _buildContentCards(),
+              _buildContentCards(context),
 
               const SizedBox(height: 100), // Extra space for bottom nav
             ],
@@ -513,26 +507,28 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _buildContentCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          // Large Card - Camouflage Generator
-          _buildLargeCard(),
-
-          const SizedBox(height: 16),
-
-          // Small Cards Row
-          Row(
+Widget _buildContentCards(BuildContext context) { // Add BuildContext context here
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 8),
+    child: Column(
+      children: [
+        _buildLargeCard(),
+        const SizedBox(height: 16),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: _buildSmallCard(
                   title: 'AR Mode',
                   subtitle: 'See your camouflaged object live',
-                  iconUrl:
-                      'https://www.figma.com/api/mcp/asset/a833e348-e030-4f6b-b801-5be74f47bc9b',
+                  iconPath: 'https://www.figma.com/api/mcp/asset/a833e348-e030-4f6b-b801-5be74f47bc9b',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ArChooseModelScreen()),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 16),
@@ -540,16 +536,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: _buildSmallCard(
                   title: 'Virtual Try-on',
                   subtitle: 'Try your camo clothes in real-time',
-                  iconUrl:
-                      'https://www.figma.com/api/mcp/asset/ac657775-0f53-4e6f-b317-7894a9c62666',
+                  iconPath: 'https://www.figma.com/api/mcp/asset/ac657775-0f53-4e6f-b317-7894a9c62666',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TryonChooseModelScreen()),
+                    );
+                  },
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildLargeCard() {
     return Container(
@@ -670,74 +672,58 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _buildSmallCard({
-    required String title,
-    required String subtitle,
-    required String iconUrl,
-  }) {
-    return Container(
-      height: 174,
+Widget _buildSmallCard({
+  required String title,
+  required String subtitle,
+  required String iconPath,
+  required VoidCallback onTap, // Add this
+}) {
+  return InkWell( // Add InkWell for clickability
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFC8D5B9), width: 2),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon
-            CachedNetworkImage(
-              imageUrl: iconUrl,
+            Image.asset(
+              iconPath,
               width: 72,
               height: 72,
-              placeholder: (context, url) => const SizedBox(
-                width: 72,
-                height: 72,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, url, error) =>
-                  const Icon(Icons.image, size: 72, color: Colors.grey),
+              fit: BoxFit.contain,
+              // If using network images in the second version, 
+              // remember to switch between Image.asset and Image.network
             ),
-
             const SizedBox(height: 12),
-
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.title.copyWith(
-                  fontSize: 20,
-                  color: const Color(0xFF090814),
-                  height: 1.2,
-                ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.title.copyWith(
+                fontSize: 20,
+                color: const Color(0xFF090814),
+                height: 1.2,
               ),
             ),
-
-            const SizedBox(height: 2),
-
-            // Subtitle
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.description.copyWith(
-                  fontSize: 14,
-                  color: const Color(0xFF666666),
-                  height: 1.35,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.description.copyWith(
+                fontSize: 14,
+                color: const Color(0xFF666666),
+                height: 1.35,
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
