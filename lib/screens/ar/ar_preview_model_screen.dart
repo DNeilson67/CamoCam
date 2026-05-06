@@ -6,12 +6,14 @@ class ArPreviewModelScreen extends StatefulWidget {
   final String selectedModel;
   final String appliedModelUrl;
   final String selectedCollectionTitle;
+  final String? modelName;
 
   const ArPreviewModelScreen({
     super.key,
     required this.selectedModel,
     required this.appliedModelUrl,
     required this.selectedCollectionTitle,
+    this.modelName,
   });
 
   @override
@@ -106,7 +108,7 @@ class _ArPreviewModelScreenState extends State<ArPreviewModelScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            widget.selectedCollectionTitle,
+                            widget.modelName ?? widget.selectedModel,
                             style: GoogleFonts.montserrat(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -174,8 +176,7 @@ class _ArPreviewModelScreenState extends State<ArPreviewModelScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ModelViewerScreen(
-                                modelName:
-                                    '${widget.selectedModel} - ${widget.selectedCollectionTitle}',
+                                modelName: widget.modelName ?? widget.selectedModel,
                                 modelUrl: widget.appliedModelUrl,
                               ),
                             ),
