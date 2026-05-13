@@ -243,7 +243,9 @@ class ArService {
     );
 
     try {
-      final streamed = await request.send().timeout(const Duration(minutes: 30));
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
       final body = await streamed.stream.bytesToString();
 
       if (streamed.statusCode == 201) {
@@ -375,7 +377,9 @@ class ArService {
     );
 
     try {
-      final streamed = await request.send().timeout(const Duration(minutes: 30));
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
       final bytes = await streamed.stream.toBytes();
 
       if (streamed.statusCode == 200) {
@@ -426,7 +430,9 @@ class ArService {
     );
 
     try {
-      final streamed = await request.send().timeout(const Duration(minutes: 30));
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
       final body = await streamed.stream.bytesToString();
 
       if (streamed.statusCode == 200 || streamed.statusCode == 201) {
