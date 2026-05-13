@@ -3,8 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
   final supabase = Supabase.instance.client;
-
-  // 🔥 Web Client ID from Google Cloud (Web Application)
+  
   static const String _webClientId =
       '921185889614-hm2ctm2r400ms7204orvgrd2o07mmnna.apps.googleusercontent.com';
 
@@ -12,6 +11,8 @@ class AuthService {
 
   Future<AuthResponse?> signInWithGoogle() async {
     try {
+      await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
+
       final GoogleSignInAccount? googleUser = await _googleSignIn
           .authenticate();
 

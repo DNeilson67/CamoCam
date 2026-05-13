@@ -6,12 +6,14 @@ class ImageViewerScreen extends StatelessWidget {
   final String imageName;
   final String imageUrl;
   final String patternName;
+  final int? collectionId;
 
   const ImageViewerScreen({
     super.key,
     required this.imageName,
     required this.imageUrl,
     required this.patternName,
+    this.collectionId,
   });
 
   @override
@@ -116,19 +118,33 @@ class ImageViewerScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TryonPhotoUploadScreen(
-                          selectedModel: imageName,
-                          selectedPattern: patternName,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: collectionId == null
+                      ? () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Open this pattern from your collections to try it on.',
+                                style: GoogleFonts.montserrat(),
+                              ),
+                            ),
+                          );
+                        }
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TryonPhotoUploadScreen(
+                                selectedModel: imageName,
+                                selectedPattern: patternName,
+                                collectionId: collectionId!,
+                              ),
+                            ),
+                          );
+                        },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF68B0AB),
+                    backgroundColor: collectionId == null
+                        ? const Color(0xFFB1BBBA)
+                        : const Color(0xFF68B0AB),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

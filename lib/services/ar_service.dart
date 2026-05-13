@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/api_config.dart';
 
 class ItemResponse {
   final int itemId;
@@ -122,7 +124,7 @@ class AppliedPatternResponse {
 }
 
 class ArService {
-  static const String _baseUrl = 'http://10.0.2.2:8000/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   /// Get all available AR items (3D models)
   Future<List<ItemResponse>> getItems() async {
@@ -241,7 +243,9 @@ class ArService {
     );
 
     try {
-      final streamed = await request.send().timeout(const Duration(minutes: 5));
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
       final body = await streamed.stream.bytesToString();
 
       if (streamed.statusCode == 201) {
@@ -343,6 +347,110 @@ class ArService {
       );
     } catch (e) {
       throw Exception('Error fetching applied pattern: $e');
+    }
+  }
+
+  /// Retexture the upper-body clothing in a photo using a collection's
+  /// camouflage style. Returns the resulting PNG image bytes.
+  Future<Uint8List> retextureClothes({
+    required File photo,
+    required int collectionId,
+  }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
+    final uri = Uri.parse('$_baseUrl/retexture-clothes');
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['collection_id'] = collectionId.toString();
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'photo',
+        photo.path,
+        contentType: MediaType.parse(_getMimeType(photo.path)),
+      ),
+    );
+
+    try {
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
+      final bytes = await streamed.stream.toBytes();
+
+      if (streamed.statusCode == 200) {
+        return bytes;
+      }
+
+      // Backend returns JSON on error; try to surface the detail
+      String message = 'HTTP ${streamed.statusCode}';
+      try {
+        final decoded = jsonDecode(utf8.decode(bytes));
+        if (decoded is Map && decoded['detail'] != null) {
+          message = decoded['detail'].toString();
+        }
+      } catch (_) {}
+      throw Exception('Failed to retexture clothes: $message');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error retexturing clothes: $e');
+    }
+  }
+
+  /// Apply a collection's camo style to a clothing-only image (asset PNG).
+  /// The backend persists the result to storage and returns its public URL.
+  Future<AppliedPatternResponse> retextureOutfit({
+    required File outfit,
+    required int collectionId,
+    required String outfitType,
+  }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
+    final uri = Uri.parse('$_baseUrl/retexture-outfit');
+    final request = http.MultipartRequest('POST', uri);
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields['collection_id'] = collectionId.toString();
+    request.fields['outfit_type'] = outfitType;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'outfit',
+        outfit.path,
+        contentType: MediaType.parse(_getMimeType(outfit.path)),
+      ),
+    );
+
+    try {
+      final streamed = await request.send().timeout(
+        const Duration(minutes: 30),
+      );
+      final body = await streamed.stream.bytesToString();
+
+      if (streamed.statusCode == 200 || streamed.statusCode == 201) {
+        final json = jsonDecode(body) as Map<String, dynamic>;
+        return AppliedPatternResponse.fromJson(json);
+      }
+
+      String message = 'HTTP ${streamed.statusCode}';
+      try {
+        final decoded = jsonDecode(body);
+        if (decoded is Map && decoded['detail'] != null) {
+          message = decoded['detail'].toString();
+        }
+      } catch (_) {}
+      throw Exception('Failed to retexture outfit: $message');
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error retexturing outfit: $e');
     }
   }
 

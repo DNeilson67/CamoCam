@@ -11,12 +11,14 @@ class ArLoadingScreen extends StatefulWidget {
   final String selectedModel;
   final int selectedItemId;
   final CollectionDetailResponse selectedCollection;
+  final String modelName;
 
   const ArLoadingScreen({
     Key? key,
     required this.selectedModel,
     required this.selectedItemId,
     required this.selectedCollection,
+    required this.modelName,
   }) : super(key: key);
 
   @override
@@ -104,6 +106,7 @@ class _ArLoadingScreenState extends State<ArLoadingScreen> {
             selectedModel: widget.selectedModel,
             appliedModelUrl: applied.appliedModelUrl,
             selectedCollectionTitle: widget.selectedCollection.title,
+            modelName: widget.modelName,
           ),
         ),
       );

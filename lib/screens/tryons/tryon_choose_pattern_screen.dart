@@ -2,12 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'tryon_preview_screen.dart';
+import 'tryon_loading_screen.dart';
 
 class TryonChoosePatternScreen extends StatefulWidget {
   final String selectedModel;
+  final String selectedModelImage;
 
-  const TryonChoosePatternScreen({super.key, required this.selectedModel});
+  const TryonChoosePatternScreen({
+    super.key,
+    required this.selectedModel,
+    required this.selectedModelImage,
+  });
 
   @override
   State<TryonChoosePatternScreen> createState() =>
@@ -320,12 +325,15 @@ class _TryonChoosePatternScreenState extends State<TryonChoosePatternScreen> {
                 child: ElevatedButton.icon(
                   onPressed: selectedPatternIndex != null
                       ? () {
+                          final pattern = _patterns[selectedPatternIndex!];
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => TryonPreviewScreen(
+                              builder: (context) => TryonLoadingScreen(
                                 selectedModel: widget.selectedModel,
-                                selectedPattern: _patterns[selectedPatternIndex!]['image'],
+                                selectedModelImage: widget.selectedModelImage,
+                                selectedPattern: pattern['image'],
+                                collectionId: pattern['id'] as int,
                               ),
                             ),
                           );

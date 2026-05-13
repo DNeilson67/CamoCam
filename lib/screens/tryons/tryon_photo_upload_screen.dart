@@ -7,11 +7,13 @@ import 'tryon_results_screen.dart';
 class TryonPhotoUploadScreen extends StatefulWidget {
   final String selectedModel;
   final String selectedPattern;
+  final int collectionId;
 
   const TryonPhotoUploadScreen({
     super.key,
     required this.selectedModel,
     required this.selectedPattern,
+    required this.collectionId,
   });
 
   @override
@@ -249,6 +251,7 @@ class _TryonPhotoUploadScreenState extends State<TryonPhotoUploadScreen> {
                                         selectedModel: widget.selectedModel,
                                         selectedPattern: widget.selectedPattern,
                                         photoPath: _selectedImage!.path,
+                                        collectionId: widget.collectionId,
                                       ),
                                     ),
                                   );

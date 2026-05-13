@@ -5,11 +5,15 @@ import 'tryon_photo_upload_screen.dart';
 class TryonPreviewScreen extends StatelessWidget {
   final String selectedModel;
   final String selectedPattern;
+  final String patternedOutfitUrl;
+  final int collectionId;
 
   const TryonPreviewScreen({
     super.key,
     required this.selectedModel,
     required this.selectedPattern,
+    required this.patternedOutfitUrl,
+    required this.collectionId,
   });
 
   @override
@@ -76,38 +80,34 @@ class TryonPreviewScreen extends StatelessWidget {
                     color: const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Placeholder for 3D model with pattern applied
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/hoodie_model.png',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      alignment: Alignment.bottomCenter,
+                      fit: StackFit.expand,
+                      children: [
+                        Container(color: const Color(0xFFF5F5F5)),
+                        Image.network(
+                          patternedOutfitUrl,
                           fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF4A7C59),
+                              ),
+                            );
+                          },
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              padding: const EdgeInsets.all(32),
+                              color: const Color(0xFFF5F5F5),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.checkroom,
-                                    size: 80,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 16),
+                                  Icon(Icons.broken_image, size: 64, color: Colors.grey[400]),
+                                  const SizedBox(height: 12),
                                   Text(
-                                    selectedModel,
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2D3142),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'with $selectedPattern pattern',
+                                    'Pattern unavailable',
                                     style: GoogleFonts.montserrat(
                                       fontSize: 14,
                                       color: const Color(0xFF7B8794),
@@ -118,8 +118,33 @@ class TryonPreviewScreen extends StatelessWidget {
                             );
                           },
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          bottom: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.checkroom, color: Colors.white, size: 14),
+                                const SizedBox(width: 6),
+                                Text(
+                                  selectedModel,
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -214,6 +239,7 @@ class TryonPreviewScreen extends StatelessWidget {
                             builder: (context) => TryonPhotoUploadScreen(
                               selectedModel: selectedModel,
                               selectedPattern: selectedPattern,
+                              collectionId: collectionId,
                             ),
                           ),
                         );

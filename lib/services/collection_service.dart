@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/api_config.dart';
 
 class CollectionResponse {
   final int collectionId;
@@ -31,7 +32,7 @@ class CollectionResponse {
 }
 
 class CollectionService {
-  static const String _baseUrl = 'http://10.0.2.2:8000/api';
+  static const String _baseUrl = ApiConfig.baseUrl;
 
   Future<CollectionResponse> createCollection({
     required String title,
@@ -62,7 +63,7 @@ class CollectionService {
       );
     }
 
-    final streamed = await request.send().timeout(const Duration(seconds: 60));
+    final streamed = await request.send().timeout(const Duration(minutes: 30));
     final body = await streamed.stream.bytesToString();
 
     if (streamed.statusCode == 201) {
