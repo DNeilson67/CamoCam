@@ -24,13 +24,13 @@ class OnboardingData {
       title: 'See It Instantly\nin AR',
       description:
           'Use your camera to preview camouflage directly on clothing, gear, or 3D models in real time.',
-      imagePath: 'assets/images/camera.png',
+      imagePath: 'assets/images/onboarding_2.png',
     ),
     OnboardingSlide(
       title: 'Have fun with your\nsaved Camo photos',
       description:
           'Don\'t forget to save your favorite moments with your camo objects',
-      imagePath: 'assets/images/computer_color.png',
+      imagePath: 'assets/images/onboarding_3.png',
       isLastSlide: true,
     ),
   ];
