@@ -186,6 +186,8 @@ class _TryonChooseModelScreenState extends State<TryonChooseModelScreen> {
                               MaterialPageRoute(
                                 builder: (_) => TryonChoosePatternScreen(
                                   selectedModel: _outfits[_currentIndex].name,
+                                  selectedModelImage:
+                                      _outfits[_currentIndex].imagePath,
                                 ),
                               ),
                             );

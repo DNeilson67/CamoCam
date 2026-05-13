@@ -1,18 +1,65 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class TryonResultsScreen extends StatelessWidget {
+import '../../services/ar_service.dart';
+
+class TryonResultsScreen extends StatefulWidget {
   final String selectedModel;
   final String selectedPattern;
   final String photoPath;
+  final int collectionId;
 
   const TryonResultsScreen({
     super.key,
     required this.selectedModel,
     required this.selectedPattern,
     required this.photoPath,
+    required this.collectionId,
   });
+
+  @override
+  State<TryonResultsScreen> createState() => _TryonResultsScreenState();
+}
+
+class _TryonResultsScreenState extends State<TryonResultsScreen> {
+  final ArService _arService = ArService();
+  Uint8List? _resultBytes;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyRetexture();
+  }
+
+  Future<void> _applyRetexture() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final bytes = await _arService.retextureClothes(
+        photo: File(widget.photoPath),
+        collectionId: widget.collectionId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _resultBytes = bytes;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,24 +90,27 @@ class TryonResultsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-
-                    // Title
                     Text(
-                      'Apply Successful',
+                      _isLoading
+                          ? 'Applying Pattern...'
+                          : _errorMessage != null
+                              ? 'Apply Failed'
+                              : 'Apply Successful',
                       style: GoogleFonts.montserrat(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF292929),
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Description
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 29),
                       child: Text(
-                        'Your outfit has been applied! Check how it looks on you before saving or trying again',
+                        _isLoading
+                            ? 'The AI is generating your camouflaged outfit. This usually takes 1–2 minutes.'
+                            : _errorMessage != null
+                                ? _errorMessage!
+                                : 'Your outfit has been applied! Check how it looks on you before saving or trying again',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.montserrat(
                           fontSize: 16,
@@ -70,10 +120,7 @@ class TryonResultsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Result Image
                     Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
@@ -90,20 +137,7 @@ class TryonResultsScreen extends StatelessWidget {
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: Image.file(
-                                File(photoPath),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: Colors.grey[200],
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 100,
-                                      color: Colors.grey[400],
-                                    ),
-                                  );
-                                },
-                              ),
+                              child: _buildResultImage(),
                             ),
                           ),
                         ),
@@ -114,8 +148,6 @@ class TryonResultsScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Bottom bar with buttons
             Container(
               padding: const EdgeInsets.fromLTRB(21, 18, 21, 18),
               decoration: BoxDecoration(
@@ -130,23 +162,25 @@ class TryonResultsScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Restart Button
                   Expanded(
                     child: SizedBox(
                       height: 50,
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.of(
-                            context,
-                          ).popUntil((route) => route.isFirst);
-                        },
-                        icon: const Icon(
-                          Icons.refresh,
-                          color: Color(0xFF4A7C59),
+                        onPressed: _errorMessage != null
+                            ? _applyRetexture
+                            : () {
+                                Navigator.of(context)
+                                    .popUntil((route) => route.isFirst);
+                              },
+                        icon: Icon(
+                          _errorMessage != null
+                              ? Icons.refresh
+                              : Icons.refresh,
+                          color: const Color(0xFF4A7C59),
                           size: 18,
                         ),
                         label: Text(
-                          'Restart',
+                          _errorMessage != null ? 'Retry' : 'Restart',
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -167,24 +201,24 @@ class TryonResultsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-
-                  // Save to Gallery Button
                   Expanded(
                     flex: 1,
                     child: SizedBox(
                       height: 50,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Saved to gallery successfully!',
-                                style: GoogleFonts.montserrat(),
-                              ),
-                              backgroundColor: const Color(0xFF4A7C59),
-                            ),
-                          );
-                        },
+                        onPressed: _resultBytes != null
+                            ? () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Saved to gallery successfully!',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
+                                    backgroundColor: const Color(0xFF4A7C59),
+                                  ),
+                                );
+                              }
+                            : null,
                         icon: const Icon(
                           Icons.save_alt,
                           color: Colors.white,
@@ -204,6 +238,7 @@ class TryonResultsScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 0,
+                          disabledBackgroundColor: const Color(0xFFB1BBBA),
                         ),
                       ),
                     ),
@@ -214,6 +249,51 @@ class TryonResultsScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildResultImage() {
+    if (_isLoading) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(
+            File(widget.photoPath),
+            fit: BoxFit.cover,
+            color: Colors.black.withOpacity(0.4),
+            colorBlendMode: BlendMode.darken,
+          ),
+          const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: Colors.white),
+                SizedBox(height: 12),
+                Text(
+                  'Generating...',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_resultBytes != null) {
+      return Image.memory(_resultBytes!, fit: BoxFit.cover);
+    }
+
+    // Error state — show original photo with a faint overlay
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.file(File(widget.photoPath), fit: BoxFit.cover),
+        Container(color: Colors.black.withOpacity(0.25)),
+        const Center(
+          child: Icon(Icons.error_outline, size: 64, color: Colors.white),
+        ),
+      ],
     );
   }
 }
