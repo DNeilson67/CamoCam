@@ -87,7 +87,7 @@ class ImageViewerScreen extends StatelessWidget {
                           child: CircularProgressIndicator(
                             value: progress.expectedTotalBytes != null
                                 ? progress.cumulativeBytesLoaded /
-                                    progress.expectedTotalBytes!
+                                      progress.expectedTotalBytes!
                                 : null,
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               Color(0xFF4A7C59),
