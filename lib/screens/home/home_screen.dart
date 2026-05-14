@@ -6,14 +6,13 @@ import '../../core/constants/app_text_styles.dart';
 import '../pattern_generator/pattern_generator_landing_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ar/ar_choose_model_screen.dart';
-import '../tryons/tryon_choose_model_screen.dart';
 class HomeScreenContent extends StatelessWidget {
   final VoidCallback? onNavigateToPatternGenerator;
   final Function(int)? onNavigateToTab;
   const HomeScreenContent({
-    super.key, 
+    super.key,
     this.onNavigateToPatternGenerator,
-    this.onNavigateToTab, // Add this
+    this.onNavigateToTab,
   });
   @override
   Widget build(BuildContext context) {
@@ -124,30 +123,38 @@ Widget _buildContentCards(BuildContext context) {
       children: [
         _buildLargeCard(context),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSmallCard(
-                title: 'AR Mode',
-                subtitle: 'See your camouflaged object live',
-                iconPath: 'assets/images/AR_mode.png',
-                onTap: () {
-                  onNavigateToTab?.call(1);
-                },
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildSmallCard(
+                  title: 'AR Mode',
+                  subtitle: 'See your camouflaged object live',
+                  icon: Image.asset(
+                    'assets/images/AR_mode.png',
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.contain,
+                  ),
+                  onTap: () => onNavigateToTab?.call(1),
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSmallCard(
-                title: 'Virtual Try-on',
-                subtitle: 'Try your camo clothes in real-time',
-                iconPath: 'assets/images/Virtual_try_on.png',
-                onTap: () {
-                  onNavigateToTab?.call(2);
-                },
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSmallCard(
+                  title: 'Saved Models',
+                  subtitle: 'Open your applied 3D camo models',
+                  icon: const Icon(
+                    Icons.bookmark_outline,
+                    size: 64,
+                    color: Color(0xFF4A7C59),
+                  ),
+                  onTap: () => onNavigateToTab?.call(2),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     ),
@@ -168,7 +175,7 @@ Widget _buildContentCards(BuildContext context) {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
             child: Image.asset(
-              'assets/images/Camouflage_generator.png', 
+              'assets/images/Camouflage_generator.png',
               height: 265,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -270,10 +277,10 @@ Widget _buildContentCards(BuildContext context) {
 Widget _buildSmallCard({
   required String title,
   required String subtitle,
-  required String iconPath,
-  required VoidCallback onTap, // Add this
+  required Widget icon,
+  required VoidCallback onTap,
 }) {
-  return InkWell( // Add InkWell for clickability
+  return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(8),
     child: Container(
@@ -287,14 +294,7 @@ Widget _buildSmallCard({
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              iconPath,
-              width: 72,
-              height: 72,
-              fit: BoxFit.contain,
-              // If using network images in the second version, 
-              // remember to switch between Image.asset and Image.network
-            ),
+            SizedBox(width: 72, height: 72, child: Center(child: icon)),
             const SizedBox(height: 12),
             Text(
               title,
@@ -337,7 +337,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<IconData> _iconList = [
     Icons.home,
     Icons.view_in_ar_outlined,
-    Icons.checkroom_outlined,
     Icons.person_outline,
   ];
 
@@ -346,18 +345,12 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
 
-    // Navigate to respective screens when implemented
     switch (index) {
       case 0: // Home - already here
         break;
       case 1: // AR
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => ARScreen()));
         break;
-      case 2: // Try-ons
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => TryOnScreen()));
-        break;
-      case 3: // Profile
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen()));
+      case 2: // Profile
         break;
     }
   }
@@ -507,46 +500,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-Widget _buildContentCards(BuildContext context) { // Add BuildContext context here
+Widget _buildContentCards(BuildContext context) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 8),
     child: Column(
       children: [
         _buildLargeCard(),
         const SizedBox(height: 16),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _buildSmallCard(
-                  title: 'AR Mode',
-                  subtitle: 'See your camouflaged object live',
-                  iconPath: 'https://www.figma.com/api/mcp/asset/a833e348-e030-4f6b-b801-5be74f47bc9b',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ArChooseModelScreen()),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildSmallCard(
-                  title: 'Virtual Try-on',
-                  subtitle: 'Try your camo clothes in real-time',
-                  iconPath: 'https://www.figma.com/api/mcp/asset/ac657775-0f53-4e6f-b317-7894a9c62666',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const TryonChooseModelScreen()),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+        _buildSmallCard(
+          title: 'AR Mode',
+          subtitle: 'See your camouflaged object live',
+          iconPath: 'https://www.figma.com/api/mcp/asset/a833e348-e030-4f6b-b801-5be74f47bc9b',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ArChooseModelScreen()),
+            );
+          },
         ),
       ],
     ),
@@ -676,9 +646,9 @@ Widget _buildSmallCard({
   required String title,
   required String subtitle,
   required String iconPath,
-  required VoidCallback onTap, // Add this
+  required VoidCallback onTap,
 }) {
-  return InkWell( // Add InkWell for clickability
+  return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(8),
     child: Container(
@@ -697,8 +667,6 @@ Widget _buildSmallCard({
               width: 72,
               height: 72,
               fit: BoxFit.contain,
-              // If using network images in the second version, 
-              // remember to switch between Image.asset and Image.network
             ),
             const SizedBox(height: 12),
             Text(

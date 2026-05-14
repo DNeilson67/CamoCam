@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/ar_service.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../pattern_generator/pattern_collections_screen.dart';
-import 'saved_models_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,6 +14,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final ArService _arService = ArService();
   List<String> _savedModelUrls = [];
   bool _isLoading = true;
 
@@ -25,35 +26,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _fetchSavedModels() async {
     try {
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
-
-      if (userId == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-
-      final List<FileObject> files = await supabase.storage
-          .from('camouflage-patterns') // ✅ same bucket
-          .list(
-            path: 'user_$userId', // ✅ same folder structure
-            searchOptions: const SearchOptions(
-              limit: 9, // only load 9 for the preview
-              offset: 0,
-            ),
-          );
-
-      final urls = files
-          .where((f) => f.name != '.emptyFolderPlaceholder')
-          .map(
-            (f) => supabase.storage
-                .from('camouflage-patterns')
-                .getPublicUrl('user_$userId/${f.name}'),
-          )
+      final collections = await _arService.getUserCollections();
+      final urls = collections
+          .map((c) => c.patternImageUrl)
+          .whereType<String>()
+          .where((url) => url.isNotEmpty)
+          .take(9)
           .toList();
 
       if (mounted) {
-        // ✅ check before setState
         setState(() {
           _savedModelUrls = urls;
           _isLoading = false;
@@ -61,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       debugPrint('Error fetching saved models: $e');
-      if (mounted) setState(() => _isLoading = false); // ✅ check here too
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -243,37 +224,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // Your Saved Models Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SavedModelsScreen(),
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF68B0AB),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Your Saved Models',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                 ),
 
                 const SizedBox(height: 12),

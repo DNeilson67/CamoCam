@@ -3,8 +3,8 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'home/home_screen.dart';
 import 'pattern_generator/pattern_generator_landing_screen.dart';
 import 'ar/ar_choose_model_screen.dart';
-import 'tryons/tryon_choose_model_screen.dart';
 import 'profile/profile_screen.dart';
+import 'profile/saved_models_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -19,30 +19,29 @@ class _MainLayoutState extends State<MainLayout> {
   final List<IconData> _iconList = [
     Icons.home,
     Icons.view_in_ar_outlined,
-    Icons.checkroom_outlined,
+    Icons.bookmark_outline,
     Icons.person_outline,
   ];
 
   // Screens for each nav item
   List<Widget> get _screens => [
-  HomeScreenContent(
-    onNavigateToPatternGenerator: () {
-      setState(() {
-        _selectedIndex = 4;
-      });
-    },
-    // Add this new handler:
-    onNavigateToTab: (index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-    },
-  ), 
-  const ArChooseModelScreen(), 
-  const TryonChooseModelScreen(), 
-  const ProfileScreen(), 
-  const PatternGeneratorLandingScreen(), 
-];
+    HomeScreenContent(
+      onNavigateToPatternGenerator: () {
+        setState(() {
+          _selectedIndex = 4;
+        });
+      },
+      onNavigateToTab: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+      },
+    ),
+    const ArChooseModelScreen(),
+    const SavedModelsScreen(),
+    const ProfileScreen(),
+    const PatternGeneratorLandingScreen(),
+  ];
 
   void _onNavItemTapped(int index) {
     setState(() {

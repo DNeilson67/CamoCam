@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/ar_service.dart';
 import 'pattern_detail_screen.dart';
 
 class PatternCollectionsScreen extends StatefulWidget {
@@ -13,39 +13,23 @@ class PatternCollectionsScreen extends StatefulWidget {
 }
 
 class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
-  final List<Map<String, dynamic>> _patterns = [];
+  final ArService _arService = ArService();
+  final List<CollectionDetailResponse> _allCollections = [];
+  List<CollectionDetailResponse> _filtered = [];
   bool _isLoading = true;
-  bool _isFetchingMore = false;
-  bool _hasMore = true;
-
-  static const int _pageSize = 9;
-  int _offset = 0;
 
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  
-  // Timer for debouncing search input
+
+  // Debounce search input so we don't refilter on every keystroke.
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _fetchPatterns();
-
-    // Listen for search changes with debouncing
     _searchController.addListener(_onSearchChanged);
-
-    // Infinite scroll listener
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !_isFetchingMore &&
-          !_isLoading &&
-          _hasMore) {
-        _fetchPatterns();
-      }
-    });
   }
 
   @override
@@ -57,87 +41,42 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
   }
 
   void _onSearchChanged() {
-    // If the user is typing, cancel the previous timer
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    // Wait 500ms after the user stops typing to trigger the search
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    _debounce = Timer(const Duration(milliseconds: 300), () {
       final query = _searchController.text.trim();
       if (query != _searchQuery) {
         setState(() {
           _searchQuery = query;
+          _applyFilter();
         });
-        _resetAndFetch();
       }
     });
   }
 
-  void _resetAndFetch() {
-    setState(() {
-      _patterns.clear();
-      _offset = 0;
-      _hasMore = true;
-      _isLoading = true;
-    });
-    _fetchPatterns();
+  void _applyFilter() {
+    final q = _searchQuery.toLowerCase();
+    _filtered = q.isEmpty
+        ? List<CollectionDetailResponse>.from(_allCollections)
+        : _allCollections
+            .where((c) => c.title.toLowerCase().contains(q))
+            .toList();
   }
 
   Future<void> _fetchPatterns() async {
-    // Prevent overlapping fetches or fetching when no more data exists
-    if (_isFetchingMore) return;
-
-    setState(() {
-      _offset == 0 ? _isLoading = true : _isFetchingMore = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
-
-      // Build query dynamically
-      var query = supabase
-          .from('collections')
-          .select('collection_id, title, pattern_image_url')
-          .eq('user_id', userId);
-
-      // Apply search filter if query exists
-      if (_searchQuery.isNotEmpty) {
-        query = query.ilike('title', '%$_searchQuery%');
-      }
-
-      final response = await query
-          .order('collection_id', ascending: true)
-          .range(_offset, _offset + _pageSize - 1);
-
-      final newPatterns = (response as List).map((row) {
-        return {
-          'collection_id': row['collection_id'] as int,
-          'name': row['title'] as String,
-          'imageUrl': row['pattern_image_url'] as String,
-        };
-      }).toList();
-
-      if (mounted) {
-        setState(() {
-          // Double check to clear list if this is a fresh search result
-          if (_offset == 0) _patterns.clear();
-
-          _patterns.addAll(newPatterns);
-          _offset += newPatterns.length;
-          _hasMore = newPatterns.length == _pageSize;
-          _isLoading = false;
-          _isFetchingMore = false;
-        });
-      }
+      final collections = await _arService.getUserCollections();
+      if (!mounted) return;
+      setState(() {
+        _allCollections
+          ..clear()
+          ..addAll(collections);
+        _applyFilter();
+        _isLoading = false;
+      });
     } catch (e) {
-      debugPrint('Error fetching patterns: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isFetchingMore = false;
-        });
-      }
+      debugPrint('[PatternCollections] fetch failed: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -148,10 +87,7 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF4A7C59),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Pattern Collections',
           style: GoogleFonts.montserrat(
@@ -163,128 +99,172 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 17),
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(48),
-                  border: Border.all(color: const Color(0xFFB3B3B3), width: 1),
-                ),
-                child: Row(
+        child: _isLoading && _filtered.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF4A7C59)),
+              )
+            : SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                child: Column(
                   children: [
-                    const SizedBox(width: 12),
-                    const Icon(Icons.search, size: 24, color: Color(0xFF666666)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
+                    const SizedBox(height: 8),
+
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        'Your Pattern Collections',
                         style: GoogleFonts.montserrat(
-                          fontSize: 16,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                           color: const Color(0xFF292929),
+                          height: 1.0,
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Search patterns...',
-                          hintStyle: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            color: const Color(0xFF666666),
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      size: 18, color: Color(0xFF666666)),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                  },
-                                )
-                              : null,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Description
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Browse and manage your saved camouflage patterns',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF727272),
+                          height: 1.4,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Search Bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFFB3B3B3)),
+                        borderRadius: BorderRadius.circular(48),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.search,
+                              color: Color(0xFF666666),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: const Color(0xFF292929),
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'Search',
+                                  hintStyle: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF666666),
+                                  ),
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  suffixIcon: _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          icon: const Icon(
+                                            Icons.clear,
+                                            size: 18,
+                                            color: Color(0xFF666666),
+                                          ),
+                                          onPressed: () =>
+                                              _searchController.clear(),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+
+                    const SizedBox(height: 20),
+
+                    // Grid / empty state
+                    if (_filtered.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          _searchQuery.isEmpty
+                              ? 'No patterns yet.'
+                              : 'No results for "$_searchQuery"',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF727272),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.78,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: _filtered.length,
+                        itemBuilder: (context, index) {
+                          return _buildPatternCard(_filtered[index], index);
+                        },
+                      ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Pattern Grid
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF4A7C59)))
-                  : _patterns.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchQuery.isEmpty
-                                ? 'No patterns yet.'
-                                : 'No results for "$_searchQuery"',
-                            style: GoogleFonts.montserrat(color: Colors.grey),
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 21),
-                          child: Column(
-                            children: [
-                              for (int i = 0; i < _patterns.length; i += 2)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 22),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      _buildPatternCard(_patterns[i], i),
-                                      if (i + 1 < _patterns.length)
-                                        _buildPatternCard(
-                                            _patterns[i + 1], i + 1)
-                                      else
-                                        const SizedBox(width: 175),
-                                    ],
-                                  ),
-                                ),
-                              if (_isFetchingMore)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: CircularProgressIndicator(
-                                      color: Color(0xFF4A7C59)),
-                                ),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildPatternCard(Map<String, dynamic> pattern, int index) {
+  Widget _buildPatternCard(CollectionDetailResponse pattern, int index) {
+    final imageCount = pattern.baseImages.length;
+    final imageUrl = pattern.patternImageUrl;
+
     return GestureDetector(
       onTap: () async {
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PatternDetailScreen(
-              collectionId: pattern['collection_id'] as int,
-              patternName: pattern['name'],
+              collectionId: pattern.collectionId,
+              patternName: pattern.title,
               patternIndex: index,
             ),
           ),
         );
-        _resetAndFetch();
+        _fetchPatterns();
       },
       child: Container(
-        width: 175,
-        height: 224,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -297,49 +277,82 @@ class _PatternCollectionsScreenState extends State<PatternCollectionsScreen> {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(15),
-                topRight: Radius.circular(15),
-              ),
-              child: Image.network(
-                pattern['imageUrl'],
-                width: 175,
-                height: 175,
-                fit: BoxFit.cover,
-                loadingBuilder: (_, child, progress) => progress == null
-                    ? child
-                    : Container(
-                        width: 175,
-                        height: 175,
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Color(0xFF4A7C59)),
-                        ),
-                      ),
-                errorBuilder: (_, __, ___) => Container(
-                  width: 175,
-                  height: 175,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.broken_image, size: 60),
+            // Pattern image
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
                 ),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (_, child, progress) => progress == null
+                            ? child
+                            : Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF4A7C59)),
+                                ),
+                              ),
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image, color: Colors.grey),
+                      ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              child: Text(
-                pattern['name'],
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  letterSpacing: 0.4,
+
+            // Pattern info
+            Flexible(
+              flex: 1,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      pattern.title,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        height: 1.2,
+                        letterSpacing: 0.4,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$imageCount image${imageCount == 1 ? '' : 's'}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF848383),
+                        height: 1.5,
+                        letterSpacing: 0.4,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

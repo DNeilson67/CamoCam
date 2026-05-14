@@ -1,11 +1,10 @@
 # CamoCam - Frontend
 
-An AI-powered camouflage pattern generator with virtual try-on and AR visualization built with Flutter. Apply dynamic camouflage patterns to 3D clothing items and see realistic previews in real-time.
+An AI-powered camouflage pattern generator with AR visualization built with Flutter. Apply dynamic camouflage patterns to 3D items and see realistic previews in real-time.
 
 ## Features
 
 - **Pattern Generation**: Upload environment images to generate unique camouflage patterns using AI
-- **Virtual Try-On**: Apply generated patterns to clothing items with realistic retexturing
 - **AR Visualization**: View 3D models with applied patterns in augmented reality
 - **Pattern Collections**: Save and manage multiple camouflage pattern collections
 - **Secure Authentication**: Google Sign-in integration with Supabase
@@ -81,12 +80,11 @@ lib/
 ├── screens/             # UI screens
 │   ├── home/            # Home screen
 │   ├── pattern_generator/    # Pattern generation workflow
-│   ├── tryons/          # Virtual try-on screens
 │   ├── ar/              # AR visualization screens
 │   ├── profile/         # User profile
 │   └── onboarding/      # Onboarding flow
 ├── services/            # Business logic and API calls
-│   ├── ar_service.dart  # AR and retexturing API
+│   ├── ar_service.dart  # AR API
 │   ├── collection_service.dart  # Pattern collection API
 │   └── storage_service.dart     # Image storage
 ├── widgets/             # Reusable widgets
@@ -122,15 +120,7 @@ lib/
 3. AI generates a unique camouflage pattern (~2 minutes)
 4. Pattern is saved to your collection
 
-### 3. Virtual Try-On
-
-1. Select a pattern from your collection
-2. Choose a clothing item (t-shirt, hoodie, jacket)
-3. Upload/take a photo of yourself
-4. AI applies the pattern to your clothing
-5. View, save, or retry the result
-
-### 4. AR Visualization
+### 3. AR Visualization
 
 1. Select a pattern and 3D model
 2. View the textured model in augmented reality
@@ -140,7 +130,7 @@ lib/
 
 The app communicates with the backend API at:
 - **Base URL**: Configured in `lib/config/api_config.dart`
-- **Timeout**: 30 minutes for long-running operations (pattern generation, retexturing)
+- **Timeout**: 30 minutes for long-running operations (pattern generation)
 
 ### Key Endpoints Used
 
@@ -149,8 +139,6 @@ The app communicates with the backend API at:
 | `/api/collections` | POST | Create pattern collection |
 | `/api/collections/me` | GET | Get user's collections |
 | `/api/apply-pattern-and-save` | POST | Apply pattern to 3D model |
-| `/retexture-clothes` | POST | Retexture clothing in photo |
-| `/retexture-outfit` | POST | Retexture clothing item image |
 | `/items` | GET | Get available 3D models |
 
 ## Development

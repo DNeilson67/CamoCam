@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/ar_service.dart';
 
 class PatternDetailScreen extends StatefulWidget {
   final int collectionId;       // ✅ new
@@ -19,6 +19,7 @@ class PatternDetailScreen extends StatefulWidget {
 }
 
 class _PatternDetailScreenState extends State<PatternDetailScreen> {
+  final ArService _arService = ArService();
   late String _patternName;
   String? _patternImageUrl;
   List<String> _usedImageUrls = [];
@@ -26,105 +27,56 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
   bool _isLoadingImages = true;
   bool _isRenaming = false;
 
-  final supabase = Supabase.instance.client;
-  String? get _userId => supabase.auth.currentUser?.id;
-
   @override
   void initState() {
     super.initState();
     _patternName = widget.patternName;
-    _fetchPatternImage();
-    _fetchUsedImages();
+    _fetchCollection();
   }
 
-  // Fetch pattern image from bucket using collection_id
-  Future<void> _fetchPatternImage() async {
+  /// Load pattern + base-image URLs from the backend in one round-trip.
+  Future<void> _fetchCollection() async {
     try {
-      if (_userId == null) return;
-
-      // File is named "pattern_collection_{id}.jpg" in the bucket
-      final List<FileObject> files = await supabase.storage
-          .from('camouflage-patterns')
-          .list(path: 'user_$_userId');
-
-      // Match by collection_id number in the filename
-      final match = files.firstWhere(
-        (f) => f.name.contains('collection_${widget.collectionId}'),
-        orElse: () => throw Exception('Pattern file not found'),
-      );
-
-      final url = supabase.storage
-          .from('camouflage-patterns')
-          .getPublicUrl('user_$_userId/${match.name}');
-
-      if (mounted) {
-        setState(() {
-          _patternImageUrl = url;
-          _isLoadingPattern = false;
-        });
-      }
+      final collection = await _arService.getCollection(widget.collectionId);
+      if (!mounted) return;
+      setState(() {
+        _patternName = collection.title;
+        _patternImageUrl = collection.patternImageUrl;
+        _usedImageUrls = collection.baseImages.map((b) => b.imageUrl).toList();
+        _isLoadingPattern = false;
+        _isLoadingImages = false;
+      });
     } catch (e) {
-      debugPrint('Error fetching pattern image: $e');
-      if (mounted) setState(() => _isLoadingPattern = false);
-    }
-  }
-
-  // Fetch used images from camouflage-images using collection_id
-  Future<void> _fetchUsedImages() async {
-    try {
-      if (_userId == null) return;
-
-      // Folder is named "collection_{id}" in camouflage-images
-      final folderPath = 'user_$_userId/collection_${widget.collectionId}';
-      debugPrint('Fetching used images from: $folderPath');
-
-      final List<FileObject> files = await supabase.storage
-          .from('camouflage-images')
-          .list(path: folderPath);
-
-      final urls = files
-          .where((f) => f.name != '.emptyFolderPlaceholder')
-          .map((f) => supabase.storage
-              .from('camouflage-images')
-              .getPublicUrl('$folderPath/${f.name}'))
-          .toList();
-
+      debugPrint('Error fetching collection: $e');
       if (mounted) {
         setState(() {
-          _usedImageUrls = urls;
+          _isLoadingPattern = false;
           _isLoadingImages = false;
         });
       }
-    } catch (e) {
-      debugPrint('Error fetching used images: $e');
-      if (mounted) setState(() => _isLoadingImages = false);
     }
   }
 
-  // Rename: update ONLY the title in the database
   Future<void> _renamePattern(String newName) async {
     if (newName == _patternName) return;
     if (mounted) setState(() => _isRenaming = true);
 
     try {
-      // Update title in collections table — no bucket changes needed
-      await supabase
-          .from('collections')
-          .update({'title': newName})
-          .eq('collection_id', widget.collectionId)
-          .eq('user_id', _userId!);
-
-      debugPrint('Title updated to "$newName" for collection_id=${widget.collectionId}');
+      final updated = await _arService.renameCollection(
+        collectionId: widget.collectionId,
+        newTitle: newName,
+      );
 
       if (mounted) {
         setState(() {
-          _patternName = newName;
+          _patternName = updated.title;
           _isRenaming = false;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Renamed to "$newName"', style: GoogleFonts.montserrat()),
+            content: Text('Renamed to "${updated.title}"',
+                style: GoogleFonts.montserrat()),
             backgroundColor: const Color(0xFF4A7C59),
             behavior: SnackBarBehavior.floating,
           ),
@@ -427,54 +379,8 @@ class _PatternDetailScreenState extends State<PatternDetailScreen> {
 
   Future<void> _deletePattern() async {
   try {
-    if (_userId == null) return;
-
-    // Step 1: Delete row from collections table
-    await supabase
-        .from('collections')
-        .delete()
-        .eq('collection_id', widget.collectionId)
-        .eq('user_id', _userId!);
-
-    debugPrint('Deleted row for collection_id=${widget.collectionId}');
-
-    // Step 2: Find and delete the pattern file from camouflage-patterns
-    final List<FileObject> patternFiles = await supabase.storage
-        .from('camouflage-patterns')
-        .list(path: 'user_$_userId');
-
-    final match = patternFiles
-        .where((f) => f.name.contains('collection_${widget.collectionId}'))
-        .toList();
-
-    if (match.isNotEmpty) {
-      await supabase.storage
-          .from('camouflage-patterns')
-          .remove(match
-              .map((f) => 'user_$_userId/${f.name}')
-              .toList());
-      debugPrint('Deleted pattern file: ${match.first.name}');
-    }
-
-    // Step 3: Delete all images inside the collection folder
-    // from camouflage-images (Supabase has no folder delete — remove each file)
-    final folderPath = 'user_$_userId/collection_${widget.collectionId}';
-    final List<FileObject> imageFiles = await supabase.storage
-        .from('camouflage-images')
-        .list(path: folderPath);
-
-    final validImages = imageFiles
-        .where((f) => f.name != '.emptyFolderPlaceholder')
-        .toList();
-
-    if (validImages.isNotEmpty) {
-      await supabase.storage
-          .from('camouflage-images')
-          .remove(validImages
-              .map((f) => '$folderPath/${f.name}')
-              .toList());
-      debugPrint('Deleted ${validImages.length} images from $folderPath');
-    }
+    await _arService.deleteCollection(widget.collectionId);
+    debugPrint('Deleted collection ${widget.collectionId} via API');
 
     if (mounted) Navigator.pop(context); // go back to collections
   } catch (e) {

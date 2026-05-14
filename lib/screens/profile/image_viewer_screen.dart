@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../tryons/tryon_photo_upload_screen.dart';
 
 class ImageViewerScreen extends StatelessWidget {
   final String imageName;
@@ -136,59 +135,6 @@ class ImageViewerScreen extends StatelessWidget {
                   color: const Color(0xFF727272),
                 ),
                 textAlign: TextAlign.center,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Action Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: collectionId == null
-                      ? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Open this pattern from your collections to try it on.',
-                                style: GoogleFonts.montserrat(),
-                              ),
-                            ),
-                          );
-                        }
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TryonPhotoUploadScreen(
-                                selectedModel: imageName,
-                                selectedPattern: patternName,
-                                collectionId: collectionId!,
-                              ),
-                            ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: collectionId == null
-                        ? const Color(0xFFB1BBBA)
-                        : const Color(0xFF68B0AB),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  icon: const Icon(Icons.checkroom, color: Colors.white),
-                  label: Text(
-                    'Try Virtual Try-On',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
               ),
             ),
 

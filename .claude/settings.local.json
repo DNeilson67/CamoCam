@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf \"c:/Users/samsu/OneDrive/Documents/BINUS Files/CamoCam/lib/screens/tryons\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\samsu\\OneDrive\\Documents\\BINUS Files\\CamoCam\\lib\\screens\\tryons"
+    ]
+  }
+}

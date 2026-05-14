@@ -32,7 +32,7 @@ class CollectionResponse {
 }
 
 class CollectionService {
-  static const String _baseUrl = ApiConfig.baseUrl;
+  static final String _baseUrl = ApiConfig.baseUrl;
 
   Future<CollectionResponse> createCollection({
     required String title,

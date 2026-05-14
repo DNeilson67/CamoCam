@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -124,7 +123,7 @@ class AppliedPatternResponse {
 }
 
 class ArService {
-  static const String _baseUrl = ApiConfig.baseUrl;
+  static final String _baseUrl = ApiConfig.baseUrl;
 
   /// Get all available AR items (3D models)
   Future<List<ItemResponse>> getItems() async {
@@ -323,6 +322,66 @@ class ArService {
     }
   }
 
+  /// Rename a collection's title via PATCH /collections/{id}
+  Future<CollectionDetailResponse> renameCollection({
+    required int collectionId,
+    required String newTitle,
+  }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/collections/$collectionId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'title': newTitle}),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return CollectionDetailResponse.fromJson(json);
+      }
+
+      throw Exception(
+        'Failed to rename collection (${response.statusCode}): ${response.body}',
+      );
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error renaming collection: $e');
+    }
+  }
+
+  /// Delete a collection (cascades to base images + pattern in storage)
+  Future<void> deleteCollection(int collectionId) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/collections/$collectionId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw Exception(
+          'Failed to delete collection (${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error deleting collection: $e');
+    }
+  }
+
   /// Get a specific applied pattern
   Future<AppliedPatternResponse> getAppliedPattern(int appliedId) async {
     final session = Supabase.instance.client.auth.currentSession;
@@ -350,119 +409,4 @@ class ArService {
     }
   }
 
-  /// Retexture the upper-body clothing in a photo using a collection's
-  /// camouflage style. Returns the resulting PNG image bytes.
-  Future<Uint8List> retextureClothes({
-    required File photo,
-    required int collectionId,
-  }) async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      throw Exception('Not authenticated. Please sign in.');
-    }
-    final token = session.accessToken;
-
-    final uri = Uri.parse('$_baseUrl/retexture-clothes');
-    final request = http.MultipartRequest('POST', uri);
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.fields['collection_id'] = collectionId.toString();
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'photo',
-        photo.path,
-        contentType: MediaType.parse(_getMimeType(photo.path)),
-      ),
-    );
-
-    try {
-      final streamed = await request.send().timeout(
-        const Duration(minutes: 30),
-      );
-      final bytes = await streamed.stream.toBytes();
-
-      if (streamed.statusCode == 200) {
-        return bytes;
-      }
-
-      // Backend returns JSON on error; try to surface the detail
-      String message = 'HTTP ${streamed.statusCode}';
-      try {
-        final decoded = jsonDecode(utf8.decode(bytes));
-        if (decoded is Map && decoded['detail'] != null) {
-          message = decoded['detail'].toString();
-        }
-      } catch (_) {}
-      throw Exception('Failed to retexture clothes: $message');
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error retexturing clothes: $e');
-    }
-  }
-
-  /// Apply a collection's camo style to a clothing-only image (asset PNG).
-  /// The backend persists the result to storage and returns its public URL.
-  Future<AppliedPatternResponse> retextureOutfit({
-    required File outfit,
-    required int collectionId,
-    required String outfitType,
-  }) async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      throw Exception('Not authenticated. Please sign in.');
-    }
-    final token = session.accessToken;
-
-    final uri = Uri.parse('$_baseUrl/retexture-outfit');
-    final request = http.MultipartRequest('POST', uri);
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.fields['collection_id'] = collectionId.toString();
-    request.fields['outfit_type'] = outfitType;
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'outfit',
-        outfit.path,
-        contentType: MediaType.parse(_getMimeType(outfit.path)),
-      ),
-    );
-
-    try {
-      final streamed = await request.send().timeout(
-        const Duration(minutes: 30),
-      );
-      final body = await streamed.stream.bytesToString();
-
-      if (streamed.statusCode == 200 || streamed.statusCode == 201) {
-        final json = jsonDecode(body) as Map<String, dynamic>;
-        return AppliedPatternResponse.fromJson(json);
-      }
-
-      String message = 'HTTP ${streamed.statusCode}';
-      try {
-        final decoded = jsonDecode(body);
-        if (decoded is Map && decoded['detail'] != null) {
-          message = decoded['detail'].toString();
-        }
-      } catch (_) {}
-      throw Exception('Failed to retexture outfit: $message');
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Error retexturing outfit: $e');
-    }
-  }
-
-  String _getMimeType(String filename) {
-    final ext = filename.split('.').last.toLowerCase();
-    switch (ext) {
-      case 'png':
-        return 'image/png';
-      case 'webp':
-        return 'image/webp';
-      default:
-        return 'image/jpeg';
-    }
-  }
 }

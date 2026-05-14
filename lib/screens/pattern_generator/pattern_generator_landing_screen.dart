@@ -66,7 +66,7 @@ class PatternGeneratorLandingScreen extends StatelessWidget {
 
                 // Description
                 Text(
-                  'Capture photos, generate patterns, and try them instantly in AR and try-ons',
+                  'Capture photos, generate patterns, and view them instantly in AR',
                   style: GoogleFonts.montserrat(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
