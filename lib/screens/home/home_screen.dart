@@ -130,7 +130,7 @@ Widget _buildContentCards(BuildContext context) {
               Expanded(
                 child: _buildSmallCard(
                   title: 'AR Mode',
-                  subtitle: 'See your camouflaged object live',
+                  subtitle: 'See your Object live',
                   icon: Image.asset(
                     'assets/images/AR_mode.png',
                     width: 72,

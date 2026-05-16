@@ -41,65 +41,47 @@ class _ModelViewerScreenState extends State<ModelViewerScreen> {
     
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          'Rename Model',
-          style: GoogleFonts.montserrat(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF292929),
-          ),
-        ),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Rename Model',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
         content: TextField(
           controller: controller,
-          style: GoogleFonts.montserrat(fontSize: 14),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
-            hintText: 'Enter new model name',
-            hintStyle: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: const Color(0xFF999999),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
-            ),
+            hintText: 'Enter model name',
+            hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFF4A7C59), width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
+          style: GoogleFonts.montserrat(),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: const Color(0xFF727272),
-              ),
-            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.montserrat(color: Colors.grey[600])),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               _renameModel(controller.text.trim());
             },
-            child: Text(
-              'Save',
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF4A7C59),
-              ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A7C59),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
             ),
+            child: Text('Save',
+                style: GoogleFonts.montserrat(
+                    color: Colors.white, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
