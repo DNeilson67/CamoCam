@@ -40,19 +40,26 @@ class _SavedModelsScreenState extends State<SavedModelsScreen> {
 
     try {
       final applied = await _arService.getUserAppliedPatterns();
+      debugPrint('📦 Fetched ${applied.length} applied patterns');
 
       // 3D models only — drop entries whose stored URL isn't a .glb
       // (existing 2D rows from the removed retexture flow).
       final fetched = applied
           .where((p) => p.appliedModelUrl.toLowerCase().endsWith('.glb'))
-          .map((p) => {
-                'name': (p.title != null && p.title!.trim().isNotEmpty)
-                    ? p.title!
-                    : 'Collection ${p.collectionId} - Model ${p.appliedId}',
-                'imagePath': p.thumbnailUrl,
-                'modelUrl': p.appliedModelUrl,
-              })
+          .map((p) {
+            debugPrint('   Applied ID: ${p.appliedId}, Title: ${p.title}');
+            return {
+              'name': (p.title != null && p.title!.trim().isNotEmpty)
+                  ? p.title!
+                  : 'Collection ${p.collectionId} - Model ${p.appliedId}',
+              'imagePath': p.thumbnailUrl,
+              'modelUrl': p.appliedModelUrl,
+              'appliedId': p.appliedId,
+            };
+          })
           .toList();
+
+      debugPrint('📦 Filtered to ${fetched.length} GLB models');
 
       if (mounted) {
         setState(() {
@@ -228,6 +235,9 @@ class _SavedModelsScreenState extends State<SavedModelsScreen> {
     const primaryColor = Color(0xFF4A7C59);
     final imageUrl = model['imagePath'] as String?;
     final modelUrl = model['modelUrl'] as String?;
+    final appliedId = model['appliedId'] as int?;
+    
+    debugPrint('🎨 _buildModelCard - appliedId: $appliedId, name: ${model['name']}');
 
     return GestureDetector(
       onTap: () {
@@ -239,6 +249,7 @@ class _SavedModelsScreenState extends State<SavedModelsScreen> {
                 modelName: model['name'],
                 modelUrl: modelUrl,
                 thumbnailUrl: model['imagePath'],
+                appliedId: appliedId,
               ),
             ),
           );

@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../../services/ar_service.dart';
-import 'ar_preview_model_screen.dart';
+import '../profile/model_viewer_screen.dart';
 
 class ArLoadingScreen extends StatefulWidget {
   final String selectedModel;
@@ -73,9 +73,12 @@ class _ArLoadingScreenState extends State<ArLoadingScreen> {
     try {
       setState(() => _statusMessage = 'Downloading model...');
 
+      // Map selected model to the correct file path
+      final modelPath = _getModelPath(widget.selectedModel);
+
       // Download model file
       final modelFile = await _downloadFile(
-        'assets/objects/models/helicopter/helicopter.glb',
+        modelPath,
         'model.glb',
       );
 
@@ -85,6 +88,7 @@ class _ArLoadingScreenState extends State<ArLoadingScreen> {
       final applied = await _arService.applyPatternAndSave(
         modelFile: modelFile,
         collectionId: widget.selectedCollection.collectionId,
+        title: widget.modelName,
       );
 
       // Clean up temp files
@@ -99,14 +103,14 @@ class _ArLoadingScreenState extends State<ArLoadingScreen> {
 
       if (!mounted) return;
 
-      // Navigate to preview screen
+      // Navigate to model viewer screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => ArPreviewModelScreen(
-            selectedModel: widget.selectedModel,
-            appliedModelUrl: applied.appliedModelUrl,
-            selectedCollectionTitle: widget.selectedCollection.title,
+          builder: (_) => ModelViewerScreen(
             modelName: widget.modelName,
+            modelUrl: applied.appliedModelUrl,
+            thumbnailUrl: applied.thumbnailUrl,
+            appliedId: applied.appliedId,
           ),
         ),
       );
@@ -134,6 +138,19 @@ class _ArLoadingScreenState extends State<ArLoadingScreen> {
           ),
         );
       }
+    }
+  }
+
+  String _getModelPath(String modelName) {
+    switch (modelName.toLowerCase()) {
+      case 'helicopter':
+        return 'assets/objects/models/helicopter/helicopter.glb';
+      case 'jeep':
+        return 'assets/objects/models/jeep/jeep.glb';
+      case 'tank':
+        return 'assets/objects/models/tank/tank.glb';
+      default:
+        return 'assets/objects/models/helicopter/helicopter.glb';
     }
   }
 

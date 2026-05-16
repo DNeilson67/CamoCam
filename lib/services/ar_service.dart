@@ -219,6 +219,7 @@ class ArService {
   Future<AppliedPatternResponse> applyPatternAndSave({
     required File modelFile,
     required int collectionId,
+    required String title,
   }) async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
@@ -231,7 +232,7 @@ class ArService {
 
     request.headers['Authorization'] = 'Bearer $token';
     request.fields['collection_id'] = collectionId.toString();
-
+    request.fields['title'] = title;
     // Add model file
     request.files.add(
       await http.MultipartFile.fromPath(
@@ -409,4 +410,38 @@ class ArService {
     }
   }
 
+  /// Rename an applied pattern's title via PATCH /applied-patterns/{id}
+  Future<AppliedPatternResponse> renameAppliedPattern({
+    required int appliedId,
+    required String newTitle,
+  }) async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      throw Exception('Not authenticated. Please sign in.');
+    }
+    final token = session.accessToken;
+
+    try {
+      final response = await http.patch(
+        Uri.parse('$_baseUrl/applied-patterns/$appliedId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'title': newTitle}),
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return AppliedPatternResponse.fromJson(json);
+      }
+
+      throw Exception(
+        'Failed to rename applied pattern (${response.statusCode}): ${response.body}',
+      );
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Error renaming applied pattern: $e');
+    }
+  }
 }
